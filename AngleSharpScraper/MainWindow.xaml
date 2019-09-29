@@ -1,11 +1,8 @@
 ﻿<Window x:Class="AngleSharpScraper.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:AngleSharpScraper"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
-        Title="SLA Unibuc Scraper" Height="450" Width="800">
+        Title="HackerNews Scraper" Height="450" Width="800">
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
@@ -13,7 +10,8 @@
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
             <ScrollViewer Margin="5">
-                <TextBox Grid.Row="0" BorderThickness="3" Name="resultsTextBox" Width="Auto" Height="Auto" HorizontalAlignment="Stretch" AcceptsTab="True" AcceptsReturn="True" VerticalAlignment="Stretch" Margin="5"/>
+                <StackPanel Name="resultsStackPanel" Orientation="Vertical">
+                </StackPanel>
             </ScrollViewer>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Click="ScrapWebsiteEvent" Width="100" Content="Scrape" Margin="5"/>
