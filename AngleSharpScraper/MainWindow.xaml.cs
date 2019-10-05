@@ -27,6 +27,81 @@ namespace AngleSharpScraper
 
         public Dictionary<string, List<Tuple<string, string>>> termToScrapeDictionary = new Dictionary<string, List<Tuple<string, string>>>();
 
+        private OpenNLP.Tools.SentenceDetect.MaximumEntropySentenceDetector mSentenceDetector;
+        private OpenNLP.Tools.Tokenize.EnglishMaximumEntropyTokenizer mTokenizer;
+        private OpenNLP.Tools.PosTagger.EnglishMaximumEntropyPosTagger mPosTagger;
+        private OpenNLP.Tools.Chunker.EnglishTreebankChunker mChunker;
+
+        private string[] SplitSentences(string paragraph)
+        {
+            if (mSentenceDetector == null)
+            {
+                mSentenceDetector = new OpenNLP.Tools.SentenceDetect.EnglishMaximumEntropySentenceDetector("EnglishSD.nbin");
+            }
+
+            return mSentenceDetector.SentenceDetect(paragraph);
+        }
+
+        private string[] TokenizeSentence(string sentence)
+        {
+            if (mTokenizer == null)
+            {
+                mTokenizer = new OpenNLP.Tools.Tokenize.EnglishMaximumEntropyTokenizer("EnglishTok.nbin");
+            }
+
+            return mTokenizer.Tokenize(sentence);
+        }
+
+        private string[] PosTagTokens(string[] tokens)
+        {
+            if (mPosTagger == null)
+            {
+                mPosTagger = new OpenNLP.Tools.PosTagger.EnglishMaximumEntropyPosTagger("EnglishPOS.nbin");
+            }
+
+            return mPosTagger.Tag(tokens);
+        }
+
+        private string ChunkTokensPostag(string[] tokens, string[] postags)
+        {
+            if (mChunker == null)
+            {
+                mChunker = new OpenNLP.Tools.Chunker.EnglishTreebankChunker("EnglishChunk.nbin");
+            }
+
+            return mChunker.GetChunks(tokens, postags);
+        }
+
+        private SharpEntropy.GisModel TrainLanguageModel(string trainingDataFile)
+        {
+            System.IO.StreamReader trainingStreamReader = new System.IO.StreamReader(trainingDataFile);
+            SharpEntropy.ITrainingEventReader eventReader = new SharpEntropy.BasicEventReader(new SharpEntropy.PlainTextByLineDataReader(trainingStreamReader));
+            SharpEntropy.GisTrainer trainer = new SharpEntropy.GisTrainer();
+            trainer.TrainModel(eventReader);
+            return new SharpEntropy.GisModel(trainer);
+        }
+
+        public void POSTagger_Method(string sent)
+        {
+            File.WriteAllText("POSTagged.txt", sent + "\n\n");
+            string[] split_sentences = SplitSentences(sent);
+            foreach (string sentence in split_sentences)
+            {
+                File.AppendAllText("POSTagged.txt", sentence + "\n");
+                string[] tokens = TokenizeSentence(sentence);
+                string[] tags = PosTagTokens(tokens);
+                string chunkPostag = ChunkTokensPostag(tokens, tags);
+
+                for (int currentTag = 0; currentTag < tags.Length; currentTag++)
+                {
+                    File.AppendAllText("POSTagged.txt", tokens[currentTag] + " - " + tags[currentTag] + "\n\n");
+                }
+
+                File.AppendAllText("POSTagged.txt", chunkPostag);
+                File.AppendAllText("POSTagged.txt", "\n\n");
+            }
+        }
+
         internal async void ScrapeWebsite()
         {
             CancellationTokenSource cancellationToken = new CancellationTokenSource();
@@ -154,6 +229,7 @@ namespace AngleSharpScraper
         public MainWindow()
         {
             InitializeComponent();
+            POSTagger_Method(File.ReadAllText("Testing NLP.txt"));
         }
 
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)

@@ -1,0 +1,7 @@
+Silvanovich also mentioned that "Signal has this large remote attack surface due to limitations in WebRTC," and the design flaw also affects the iOS version of the messaging app, but can not be exploited because "the call is not completed due to an error in the UI caused by the unexpected sequence of states."
+
+Silvanovich reported this vulnerability to the Signal security team just last week.
+
+The Signal security team immediately acknowledged the issue and patched it within a few hours on the same day with the release of Signal for Android v4.47.7, the company confirmed The Hacker News.
+
+What's your take? Let me write it down for you again—go and install the latest available update of Signal Private Messenger app from Google Play Store and make sure you always run up-to-date apps on your Android and iOS devices.

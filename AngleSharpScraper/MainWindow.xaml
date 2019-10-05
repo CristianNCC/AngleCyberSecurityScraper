@@ -9,9 +9,9 @@
                 <RowDefinition/>
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
+
             <ScrollViewer Margin="5">
-                <StackPanel Name="resultsStackPanel" Orientation="Vertical">
-                </StackPanel>
+                <StackPanel Name="resultsStackPanel" Orientation="Vertical"/>
             </ScrollViewer>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Click="ScrapWebsiteEvent" Width="100" Content="Scrape" Margin="5"/>

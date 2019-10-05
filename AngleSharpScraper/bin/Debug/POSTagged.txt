@@ -1,0 +1,342 @@
+Silvanovich also mentioned that "Signal has this large remote attack surface due to limitations in WebRTC," and the design flaw also affects the iOS version of the messaging app, but can not be exploited because "the call is not completed due to an error in the UI caused by the unexpected sequence of states."
+
+Silvanovich reported this vulnerability to the Signal security team just last week.
+
+The Signal security team immediately acknowledged the issue and patched it within a few hours on the same day with the release of Signal for Android v4.47.7, the company confirmed The Hacker News.
+
+What's your take? Let me write it down for you again—go and install the latest available update of Signal Private Messenger app from Google Play Store and make sure you always run up-to-date apps on your Android and iOS devices.
+
+Silvanovich also mentioned that "Signal has this large remote attack surface due to limitations in WebRTC," and the design flaw also affects the iOS version of the messaging app, but can not be exploited because "the call is not completed due to an error in the UI caused by the unexpected sequence of states."
+
+
+Silvanovich - NNP
+
+also - RB
+
+mentioned - VBD
+
+that - IN
+
+" - ``
+
+Signal - NNP
+
+has - VBZ
+
+this - DT
+
+large - JJ
+
+remote - JJ
+
+attack - NN
+
+surface - NN
+
+due - JJ
+
+to - TO
+
+limitations - NNS
+
+in - IN
+
+WebRTC - NNP
+
+, - ,
+
+" - ''
+
+and - CC
+
+the - DT
+
+design - NN
+
+flaw - NN
+
+also - RB
+
+affects - VBZ
+
+the - DT
+
+iOS - NNP
+
+version - NN
+
+of - IN
+
+the - DT
+
+messaging - NN
+
+app - NN
+
+, - ,
+
+but - CC
+
+can - MD
+
+not - RB
+
+be - VB
+
+exploited - VBN
+
+because - IN
+
+" - ``
+
+the - DT
+
+call - NN
+
+is - VBZ
+
+not - RB
+
+completed - VBN
+
+due - JJ
+
+to - TO
+
+an - DT
+
+error - NN
+
+in - IN
+
+the - DT
+
+UI - NN
+
+caused - VBN
+
+by - IN
+
+the - DT
+
+unexpected - JJ
+
+sequence - NN
+
+of - IN
+
+states - NNS
+
+. - .
+
+" - ''
+
+ [NP Silvanovich/NNP ] [ADVP also/RB ] [VP mentioned/VBD ] [SBAR that/IN ] "/`` [NP Signal/NNP ] [VP has/VBZ ] [NP this/DT large/JJ remote/JJ attack/NN surface/NN ] [ADJP due/JJ ] [PP to/TO ] [NP limitations/NNS ] [PP in/IN ] [NP WebRTC/NNP ] ,/, "/'' and/CC [NP the/DT design/NN flaw/NN ] [ADVP also/RB ] [VP affects/VBZ ] [NP the/DT iOS/NNP version/NN ] [PP of/IN ] [NP the/DT messaging/NN app/NN ] ,/, but/CC [VP can/MD not/RB be/VB exploited/VBN ] [SBAR because/IN ] "/`` [NP the/DT call/NN ] [VP is/VBZ not/RB completed/VBN ] [ADJP due/JJ ] [PP to/TO ] [NP an/DT error/NN ] [PP in/IN ] [NP the/DT UI/NN ] [VP caused/VBN ] [PP by/IN ] [NP the/DT unexpected/JJ sequence/NN ] [PP of/IN ] [NP states/NNS ] ./. "/''
+
+
+Silvanovich reported this vulnerability to the Signal security team just last week.
+
+
+Silvanovich - NNP
+
+reported - VBD
+
+this - DT
+
+vulnerability - NN
+
+to - TO
+
+the - DT
+
+Signal - NNP
+
+security - NN
+
+team - NN
+
+just - RB
+
+last - JJ
+
+week - NN
+
+. - .
+
+ [NP Silvanovich/NNP ] [VP reported/VBD ] [NP this/DT vulnerability/NN ] [PP to/TO ] [NP the/DT Signal/NNP security/NN team/NN ] [NP just/RB last/JJ week/NN ] ./.
+
+
+The Signal security team immediately acknowledged the issue and patched it within a few hours on the same day with the release of Signal for Android v4.47.7, the company confirmed The Hacker News.
+
+
+The - DT
+
+Signal - NNP
+
+security - NN
+
+team - NN
+
+immediately - RB
+
+acknowledged - VBD
+
+the - DT
+
+issue - NN
+
+and - CC
+
+patched - VBN
+
+it - PRP
+
+within - IN
+
+a - DT
+
+few - JJ
+
+hours - NNS
+
+on - IN
+
+the - DT
+
+same - JJ
+
+day - NN
+
+with - IN
+
+the - DT
+
+release - NN
+
+of - IN
+
+Signal - NNP
+
+for - IN
+
+Android - NNP
+
+v4.47.7 - CD
+
+, - ,
+
+the - DT
+
+company - NN
+
+confirmed - VBD
+
+The - DT
+
+Hacker - NNP
+
+News - NNP
+
+. - .
+
+ [NP The/DT Signal/NNP security/NN team/NN ] [ADVP immediately/RB ] [VP acknowledged/VBD ] [NP the/DT issue/NN ] and/CC [VP patched/VBN ] [NP it/PRP ] [PP within/IN ] [NP a/DT few/JJ hours/NNS ] [PP on/IN ] [NP the/DT same/JJ day/NN ] [PP with/IN ] [NP the/DT release/NN ] [PP of/IN ] [NP Signal/NNP ] [PP for/IN ] [NP Android/NNP v4.47.7/CD ] ,/, [NP the/DT company/NN ] [VP confirmed/VBD ] [NP The/DT Hacker/NNP News/NNP ] ./.
+
+
+What's your take? 
+What - WP
+
+'s - VBZ
+
+your - PRP$
+
+take - VB
+
+? - .
+
+ [NP What/WP ] [VP 's/VBZ ] [NP your/PRP$ ] [VP take/VB ] ?/.
+
+
+Let me write it down for you again—go and install the latest available update of Signal Private Messenger app from Google Play Store and make sure you always run up-to-date apps on your Android and iOS devices.
+Let - VB
+
+me - PRP
+
+write - VB
+
+it - PRP
+
+down - RP
+
+for - IN
+
+you - PRP
+
+agai - VBP
+
+n— - RB
+
+go - VB
+
+and - CC
+
+install - VB
+
+the - DT
+
+latest - JJS
+
+available - JJ
+
+update - NN
+
+of - IN
+
+Signal - NNP
+
+Private - JJ
+
+Messenger - NNP
+
+app - VBP
+
+from - IN
+
+Google - NNP
+
+Play - NNP
+
+Store - NNP
+
+and - CC
+
+make - VB
+
+sure - JJ
+
+you - PRP
+
+always - RB
+
+run - VB
+
+up-to-date - JJ
+
+apps - NNS
+
+on - IN
+
+your - PRP$
+
+Android - NNP
+
+and - CC
+
+iOS - NNP
+
+devices - NNS
+
+. - .
+
+ [VP Let/VB ] [NP me/PRP ] [VP write/VB it/PRP ] [PRT down/RP ] [SBAR for/IN ] [NP you/PRP ] [VP agai/VBP n—/RB go/VB and/CC install/VB ] [NP the/DT latest/JJS available/JJ update/NN ] [PP of/IN ] [NP Signal/NNP Private/JJ Messenger/NNP app/VBP ] [PP from/IN ] [NP Google/NNP Play/NNP Store/NNP ] and/CC [VP make/VB ] [NP sure/JJ ] [NP you/PRP ] [ADVP always/RB ] [VP run/VB ] [NP up-to-date/JJ apps/NNS ] [PP on/IN ] [NP your/PRP$ Android/NNP and/CC iOS/NNP devices/NNS ] ./.
+
+
