@@ -13,102 +13,26 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Diagnostics;
 using System.Windows.Navigation;
+using System.Windows.Input;
+using System.Text.RegularExpressions;
 
 namespace AngleSharpScraper
 {
     public partial class MainWindow : Window
     {
         private string siteUrl = "https://thehackernews.com/";
-        private int numberOfPages = 50;
-
-        private string ArticleTitle { get; set; }
-        private string Url { get; set; }
-        public string[] QueryTerms { get; set; }
+        public int numberOfPages;
+        private string articleTitle;
+        private string url;
+        public string[] queryTerms;
 
         public Dictionary<string, List<Tuple<string, string>>> termToScrapeDictionary = new Dictionary<string, List<Tuple<string, string>>>();
-
-        private OpenNLP.Tools.SentenceDetect.MaximumEntropySentenceDetector mSentenceDetector;
-        private OpenNLP.Tools.Tokenize.EnglishMaximumEntropyTokenizer mTokenizer;
-        private OpenNLP.Tools.PosTagger.EnglishMaximumEntropyPosTagger mPosTagger;
-        private OpenNLP.Tools.Chunker.EnglishTreebankChunker mChunker;
-
-        private string[] SplitSentences(string paragraph)
-        {
-            if (mSentenceDetector == null)
-            {
-                mSentenceDetector = new OpenNLP.Tools.SentenceDetect.EnglishMaximumEntropySentenceDetector("EnglishSD.nbin");
-            }
-
-            return mSentenceDetector.SentenceDetect(paragraph);
-        }
-
-        private string[] TokenizeSentence(string sentence)
-        {
-            if (mTokenizer == null)
-            {
-                mTokenizer = new OpenNLP.Tools.Tokenize.EnglishMaximumEntropyTokenizer("EnglishTok.nbin");
-            }
-
-            return mTokenizer.Tokenize(sentence);
-        }
-
-        private string[] PosTagTokens(string[] tokens)
-        {
-            if (mPosTagger == null)
-            {
-                mPosTagger = new OpenNLP.Tools.PosTagger.EnglishMaximumEntropyPosTagger("EnglishPOS.nbin");
-            }
-
-            return mPosTagger.Tag(tokens);
-        }
-
-        private string ChunkTokensPostag(string[] tokens, string[] postags)
-        {
-            if (mChunker == null)
-            {
-                mChunker = new OpenNLP.Tools.Chunker.EnglishTreebankChunker("EnglishChunk.nbin");
-            }
-
-            return mChunker.GetChunks(tokens, postags);
-        }
-
-        private SharpEntropy.GisModel TrainLanguageModel(string trainingDataFile)
-        {
-            System.IO.StreamReader trainingStreamReader = new System.IO.StreamReader(trainingDataFile);
-            SharpEntropy.ITrainingEventReader eventReader = new SharpEntropy.BasicEventReader(new SharpEntropy.PlainTextByLineDataReader(trainingStreamReader));
-            SharpEntropy.GisTrainer trainer = new SharpEntropy.GisTrainer();
-            trainer.TrainModel(eventReader);
-            return new SharpEntropy.GisModel(trainer);
-        }
-
-        public void POSTagger_Method(string sent)
-        {
-            File.WriteAllText("POSTagged.txt", sent + "\n\n");
-            string[] split_sentences = SplitSentences(sent);
-            foreach (string sentence in split_sentences)
-            {
-                File.AppendAllText("POSTagged.txt", sentence + "\n");
-                string[] tokens = TokenizeSentence(sentence);
-                string[] tags = PosTagTokens(tokens);
-                string chunkPostag = ChunkTokensPostag(tokens, tags);
-
-                for (int currentTag = 0; currentTag < tags.Length; currentTag++)
-                {
-                    File.AppendAllText("POSTagged.txt", tokens[currentTag] + " - " + tags[currentTag] + "\n\n");
-                }
-
-                File.AppendAllText("POSTagged.txt", chunkPostag);
-                File.AppendAllText("POSTagged.txt", "\n\n");
-            }
-        }
 
         internal async void ScrapeWebsite()
         {
             CancellationTokenSource cancellationToken = new CancellationTokenSource();
             HttpClient httpClient = new HttpClient();
             HtmlParser parser = new HtmlParser();
-
-            resultsStackPanel.Children.Clear();
 
             for (int iPageIdx = 0; iPageIdx < numberOfPages; iPageIdx++)
             {
@@ -183,7 +107,7 @@ namespace AngleSharpScraper
         private void GetScrapeResults(IHtmlDocument document)
         {
             List<IElement> articleLink = new List<IElement>();
-            foreach (var term in QueryTerms)
+            foreach (var term in queryTerms)
             {
                 articleLink = document.All.Where(x => x.ClassName == "story-link" && (x.InnerHtml.Contains(term) || 
                         x.InnerHtml.Contains(term.ToLower()))).ToList();
@@ -197,15 +121,15 @@ namespace AngleSharpScraper
             foreach (var result in articleLink)
             {
                 CleanUpResults(result);
-                if (!string.IsNullOrWhiteSpace(ArticleTitle) && !string.IsNullOrWhiteSpace(Url))
+                if (!string.IsNullOrWhiteSpace(articleTitle) && !string.IsNullOrWhiteSpace(url))
                 {
-                    string currentLine = $"{ArticleTitle}{Environment.NewLine} " +
-                        $"- {Url}{Environment.NewLine}{Environment.NewLine}";
+                    string currentLine = $"{articleTitle}{Environment.NewLine} " +
+                        $"- {url}{Environment.NewLine}{Environment.NewLine}";
 
                     if (!termToScrapeDictionary.ContainsKey(term))
                         termToScrapeDictionary[term] = new List<Tuple<string, string>>();
 
-                    termToScrapeDictionary[term].Add(new Tuple<string, string>(ArticleTitle, Url));
+                    termToScrapeDictionary[term].Add(new Tuple<string, string>(articleTitle, url));
                 }
             }
         }
@@ -222,22 +146,30 @@ namespace AngleSharpScraper
         private void SplitResults(string htmlResult)
         {
             string[] splitResults = htmlResult.Split('*');
-            Url = splitResults[0];
-            ArticleTitle = splitResults[1];
+            url = splitResults[0];
+            articleTitle = splitResults[1];
         }
 
         public MainWindow()
         {
             InitializeComponent();
-            POSTagger_Method(File.ReadAllText("Testing NLP.txt"));
         }
 
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)
         {
+            termToScrapeDictionary.Clear();
+            resultsStackPanel.Children.Clear();
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
 
-            QueryTerms = queryTermsTextBox.Text.Split(';');
+            int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
+            queryTerms = queryTermsTextBox.Text.Split(';');
             ScrapeWebsite();
+        }
+
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new Regex("[^0-9]+");
+            e.Handled = regex.IsMatch(e.Text);
         }
     }
 }
