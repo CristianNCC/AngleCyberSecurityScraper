@@ -1,342 +1,524 @@
-Silvanovich also mentioned that "Signal has this large remote attack surface due to limitations in WebRTC," and the design flaw also affects the iOS version of the messaging app, but can not be exploited because "the call is not completed due to an error in the UI caused by the unexpected sequence of states."
+Inevitably, a friend will log off with something in their inventory that you needed. You can pilfer what they held out on you by checking what looks like a dresser inside their cabin. If you choose to invite friends to one of your existing saves, they will create a new character and begin with a basic set of tools, no skill levels, and only the starting amount of daily energy. My partner was forced to dig through my abandoned clothes and weapons to find hand-me-downs that would let him dive into the lowest levels of the mines, while also finding that he didn’t have the energy to water all the crops on my farm. 
 
-Silvanovich reported this vulnerability to the Signal security team just last week.
+Apart from time constraints, a few other oddities are worth noting. While in multiplayer mode, you will not be able to move or demolish your farm buildings from Robin’s store. Presumably this could create conflicts if your friends are inside of a building you demolish or are standing where you hope to move one. For a constant organizer like me, kicking my partner out so I could edit our farm’s arrangement in singleplayer every so often is not ideal.
 
-The Signal security team immediately acknowledged the issue and patched it within a few hours on the same day with the release of Signal for Android v4.47.7, the company confirmed The Hacker News.
+Once your multiplayer farm is running like clockwork, you can expand your operation into the modded zone with the multiplayer mods linked above!
 
-What's your take? Let me write it down for you again—go and install the latest available update of Signal Private Messenger app from Google Play Store and make sure you always run up-to-date apps on your Android and iOS devices.
+Inevitably, a friend will log off with something in their inventory that you needed. 
+Inevitably - RB
 
-Silvanovich also mentioned that "Signal has this large remote attack surface due to limitations in WebRTC," and the design flaw also affects the iOS version of the messaging app, but can not be exploited because "the call is not completed due to an error in the UI caused by the unexpected sequence of states."
+, - ,
 
+a - DT
 
-Silvanovich - NNP
+friend - NN
 
-also - RB
+will - MD
 
-mentioned - VBD
+log - VB
+
+off - RP
+
+with - IN
+
+something - NN
+
+in - IN
+
+their - PRP$
+
+inventory - NN
 
 that - IN
 
-" - ``
+you - PRP
 
-Signal - NNP
+needed - VBD
 
-has - VBZ
+. - .
 
-this - DT
+ [ADVP Inevitably/RB ] ,/, [NP a/DT friend/NN ] [VP will/MD log/VB ] [PRT off/RP ] [NP with/IN something/NN ] [PP in/IN ] [NP their/PRP$ inventory/NN ] [SBAR that/IN ] [NP you/PRP ] [VP needed/VBD ] ./.
 
-large - JJ
 
-remote - JJ
-
-attack - NN
-
-surface - NN
-
-due - JJ
-
-to - TO
-
-limitations - NNS
-
-in - IN
-
-WebRTC - NNP
-
-, - ,
-
-" - ''
-
-and - CC
-
-the - DT
-
-design - NN
-
-flaw - NN
-
-also - RB
-
-affects - VBZ
-
-the - DT
-
-iOS - NNP
-
-version - NN
-
-of - IN
-
-the - DT
-
-messaging - NN
-
-app - NN
-
-, - ,
-
-but - CC
+You can pilfer what they held out on you by checking what looks like a dresser inside their cabin. 
+You - PRP
 
 can - MD
 
-not - RB
+pilfer - VB
 
-be - VB
+what - WP
 
-exploited - VBN
+they - PRP
 
-because - IN
+held - VBD
 
-" - ``
+out - RP
 
-the - DT
+on - IN
 
-call - NN
-
-is - VBZ
-
-not - RB
-
-completed - VBN
-
-due - JJ
-
-to - TO
-
-an - DT
-
-error - NN
-
-in - IN
-
-the - DT
-
-UI - NN
-
-caused - VBN
+you - PRP
 
 by - IN
 
-the - DT
+checking - VBG
 
-unexpected - JJ
+what - WP
 
-sequence - NN
+looks - VBZ
 
-of - IN
+like - IN
 
-states - NNS
+a - DT
+
+dresser - NN
+
+inside - IN
+
+their - PRP$
+
+cabin - NN
 
 . - .
 
-" - ''
-
- [NP Silvanovich/NNP ] [ADVP also/RB ] [VP mentioned/VBD ] [SBAR that/IN ] "/`` [NP Signal/NNP ] [VP has/VBZ ] [NP this/DT large/JJ remote/JJ attack/NN surface/NN ] [ADJP due/JJ ] [PP to/TO ] [NP limitations/NNS ] [PP in/IN ] [NP WebRTC/NNP ] ,/, "/'' and/CC [NP the/DT design/NN flaw/NN ] [ADVP also/RB ] [VP affects/VBZ ] [NP the/DT iOS/NNP version/NN ] [PP of/IN ] [NP the/DT messaging/NN app/NN ] ,/, but/CC [VP can/MD not/RB be/VB exploited/VBN ] [SBAR because/IN ] "/`` [NP the/DT call/NN ] [VP is/VBZ not/RB completed/VBN ] [ADJP due/JJ ] [PP to/TO ] [NP an/DT error/NN ] [PP in/IN ] [NP the/DT UI/NN ] [VP caused/VBN ] [PP by/IN ] [NP the/DT unexpected/JJ sequence/NN ] [PP of/IN ] [NP states/NNS ] ./. "/''
+ [NP You/PRP ] [VP can/MD pilfer/VB ] [NP what/WP ] [NP they/PRP ] [VP held/VBD ] [PRT out/RP ] [SBAR on/IN ] [NP you/PRP ] [PP by/IN ] [VP checking/VBG ] [NP what/WP ] [VP looks/VBZ ] [PP like/IN ] [NP a/DT dresser/NN ] [PP inside/IN ] [NP their/PRP$ cabin/NN ] ./.
 
 
-Silvanovich reported this vulnerability to the Signal security team just last week.
+If you choose to invite friends to one of your existing saves, they will create a new character and begin with a basic set of tools, no skill levels, and only the starting amount of daily energy. 
+If - IN
 
+you - PRP
 
-Silvanovich - NNP
-
-reported - VBD
-
-this - DT
-
-vulnerability - NN
+choose - VBP
 
 to - TO
 
-the - DT
+invite - VB
 
-Signal - NNP
+friends - NNS
 
-security - NN
+to - TO
 
-team - NN
+one - CD
 
-just - RB
+of - IN
 
-last - JJ
+your - PRP$
 
-week - NN
+existing - VBG
 
-. - .
+saves - NNS
 
- [NP Silvanovich/NNP ] [VP reported/VBD ] [NP this/DT vulnerability/NN ] [PP to/TO ] [NP the/DT Signal/NNP security/NN team/NN ] [NP just/RB last/JJ week/NN ] ./.
+, - ,
 
+they - PRP
 
-The Signal security team immediately acknowledged the issue and patched it within a few hours on the same day with the release of Signal for Android v4.47.7, the company confirmed The Hacker News.
+will - MD
 
+create - VB
 
-The - DT
+a - DT
 
-Signal - NNP
+new - JJ
 
-security - NN
-
-team - NN
-
-immediately - RB
-
-acknowledged - VBD
-
-the - DT
-
-issue - NN
+character - NN
 
 and - CC
 
-patched - VBN
+begin - VB
 
-it - PRP
+with - IN
 
-within - IN
+a - DT
+
+basic - JJ
+
+set - NN
+
+of - IN
+
+tools - NNS
+
+, - ,
+
+no - DT
+
+skill - NN
+
+levels - NNS
+
+, - ,
+
+and - CC
+
+only - RB
+
+the - DT
+
+starting - VBG
+
+amount - NN
+
+of - IN
+
+daily - JJ
+
+energy - NN
+
+. - .
+
+ [SBAR If/IN ] [NP you/PRP ] [VP choose/VBP to/TO invite/VB ] [NP friends/NNS ] [PP to/TO ] [NP one/CD ] [PP of/IN ] [NP your/PRP$ existing/VBG saves/NNS ] ,/, [NP they/PRP ] [VP will/MD create/VB ] [NP a/DT new/JJ character/NN ] and/CC [VP begin/VB ] [PP with/IN ] [NP a/DT basic/JJ set/NN ] [PP of/IN ] [NP tools/NNS ] ,/, [NP no/DT skill/NN levels/NNS ] ,/, and/CC [ADVP only/RB ] [NP the/DT starting/VBG amount/NN ] [PP of/IN ] [NP daily/JJ energy/NN ] ./.
+
+
+My partner was forced to dig through my abandoned clothes and weapons to find hand-me-downs that would let him dive into the lowest levels of the mines, while also finding that he didn’t have the energy to water all the crops on my farm. 
+
+
+My - PRP$
+
+partner - NN
+
+was - VBD
+
+forced - VBN
+
+to - TO
+
+dig - VB
+
+through - IN
+
+my - PRP$
+
+abandoned - VBN
+
+clothes - NNS
+
+and - CC
+
+weapons - NNS
+
+to - TO
+
+find - VB
+
+hand-me-downs - NNS
+
+that - WDT
+
+would - MD
+
+let - VB
+
+him - PRP
+
+dive - VB
+
+into - IN
+
+the - DT
+
+lowest - JJS
+
+levels - NNS
+
+of - IN
+
+the - DT
+
+mines - NNS
+
+, - ,
+
+while - IN
+
+also - RB
+
+finding - VBG
+
+that - IN
+
+he - PRP
+
+did - VBD
+
+n - JJ
+
+’t - NN
+
+have - VBP
+
+the - DT
+
+energy - NN
+
+to - TO
+
+water - NN
+
+all - DT
+
+the - DT
+
+crops - NNS
+
+on - IN
+
+my - PRP$
+
+farm - NN
+
+. - .
+
+ [NP My/PRP$ partner/NN ] [VP was/VBD forced/VBN to/TO dig/VB ] [PP through/IN ] [NP my/PRP$ abandoned/VBN clothes/NNS and/CC weapons/NNS ] [VP to/TO find/VB ] [NP hand-me-downs/NNS ] [NP that/WDT ] [VP would/MD let/VB ] [NP him/PRP ] [VP dive/VB ] [PP into/IN ] [NP the/DT lowest/JJS levels/NNS ] [PP of/IN ] [NP the/DT mines/NNS ] ,/, [SBAR while/IN ] [ADVP also/RB ] [VP finding/VBG ] [SBAR that/IN ] [NP he/PRP ] [VP did/VBD ] [NP n/JJ ’t/NN ] [VP have/VBP ] [NP the/DT energy/NN ] [PP to/TO ] [NP water/NN ] [NP all/DT the/DT crops/NNS ] [PP on/IN ] [NP my/PRP$ farm/NN ] ./.
+
+
+Apart from time constraints, a few other oddities are worth noting. 
+Apart - NNP
+
+from - IN
+
+time - NN
+
+constraints - NNS
+
+, - ,
 
 a - DT
 
 few - JJ
 
-hours - NNS
+other - JJ
 
-on - IN
+oddities - NNS
+
+are - VBP
+
+worth - JJ
+
+noting - VBG
+
+. - .
+
+ [NP Apart/NNP ] [PP from/IN ] [NP time/NN constraints/NNS ] ,/, [NP a/DT few/JJ other/JJ oddities/NNS ] [VP are/VBP ] [ADJP worth/JJ ] [NP noting/VBG ] ./.
+
+
+While in multiplayer mode, you will not be able to move or demolish your farm buildings from Robin’s store. 
+While - IN
+
+in - IN
+
+multiplayer - JJ
+
+mode - NN
+
+, - ,
+
+you - PRP
+
+will - MD
+
+not - RB
+
+be - VB
+
+able - JJ
+
+to - TO
+
+move - VB
+
+or - CC
+
+demolish - VB
+
+your - PRP$
+
+farm - NN
+
+buildings - NNS
+
+from - IN
+
+Robi - NNP
+
+n - NN
+
+’s - NNP
+
+store - NN
+
+. - .
+
+ [SBAR While/IN ] [PP in/IN ] [NP multiplayer/JJ mode/NN ] ,/, [NP you/PRP ] [VP will/MD not/RB be/VB ] [ADJP able/JJ ] [VP to/TO move/VB or/CC demolish/VB ] [NP your/PRP$ farm/NN buildings/NNS ] [PP from/IN ] [NP Robi/NNP n/NN ’s/NNP store/NN ] ./.
+
+
+Presumably this could create conflicts if your friends are inside of a building you demolish or are standing where you hope to move one. 
+Presumably - RB
+
+this - DT
+
+could - MD
+
+create - VB
+
+conflicts - NNS
+
+if - IN
+
+your - PRP$
+
+friends - NNS
+
+are - VBP
+
+inside - IN
+
+of - IN
+
+a - DT
+
+building - NN
+
+you - PRP
+
+demolish - VBP
+
+or - CC
+
+are - VBP
+
+standing - VBG
+
+where - WRB
+
+you - PRP
+
+hope - VBP
+
+to - TO
+
+move - VB
+
+one - CD
+
+. - .
+
+ [NP Presumably/RB this/DT ] [VP could/MD create/VB ] [NP conflicts/NNS ] [PP if/IN ] [NP your/PRP$ friends/NNS ] [VP are/VBP ] [PP inside/IN ] [PP of/IN ] [NP a/DT building/NN ] [NP you/PRP ] [VP demolish/VBP ] or/CC [VP are/VBP standing/VBG ] [ADVP where/WRB ] [NP you/PRP ] [VP hope/VBP to/TO move/VB ] [NP one/CD ] ./.
+
+
+For a constant organizer like me, kicking my partner out so I could edit our farm’s arrangement in singleplayer every so often is not ideal.
+
+
+For - IN
+
+a - DT
+
+constant - JJ
+
+organizer - NN
+
+like - IN
+
+me - PRP
+
+, - ,
+
+kicking - VBG
+
+my - PRP$
+
+partner - NN
+
+out - RP
+
+so - IN
+
+I - PRP
+
+could - MD
+
+edit - VB
+
+our - PRP$
+
+farm’s - NNS
+
+arrangement - NN
+
+in - IN
+
+singleplayer - NN
+
+every - NN
+
+so - RB
+
+often - RB
+
+is - VBZ
+
+not - RB
+
+ideal - JJ
+
+. - .
+
+ [PP For/IN ] [NP a/DT constant/JJ organizer/NN ] [PP like/IN ] [NP me/PRP ] ,/, [VP kicking/VBG ] [NP my/PRP$ partner/NN out/RP ] so/IN [NP I/PRP ] [VP could/MD edit/VB ] [NP our/PRP$ farm’s/NNS arrangement/NN ] [PP in/IN ] [NP singleplayer/NN every/NN ] [ADVP so/RB often/RB ] [VP is/VBZ ] not/RB [ADJP ideal/JJ ] ./.
+
+
+Once your multiplayer farm is running like clockwork, you can expand your operation into the modded zone with the multiplayer mods linked above!
+Once - RB
+
+your - PRP$
+
+multiplayer - NN
+
+farm - NN
+
+is - VBZ
+
+running - VBG
+
+like - IN
+
+clockwork - NN
+
+, - ,
+
+you - PRP
+
+can - MD
+
+expand - VB
+
+your - PRP$
+
+operation - NN
+
+into - IN
 
 the - DT
 
-same - JJ
+modded - JJ
 
-day - NN
+zone - NN
 
 with - IN
 
 the - DT
 
-release - NN
+multiplayer - JJ
 
-of - IN
+mods - NNS
 
-Signal - NNP
+linked - VBN
 
-for - IN
+abov - RB
 
-Android - NNP
+e - NN
 
-v4.47.7 - CD
+! - .
 
-, - ,
-
-the - DT
-
-company - NN
-
-confirmed - VBD
-
-The - DT
-
-Hacker - NNP
-
-News - NNP
-
-. - .
-
- [NP The/DT Signal/NNP security/NN team/NN ] [ADVP immediately/RB ] [VP acknowledged/VBD ] [NP the/DT issue/NN ] and/CC [VP patched/VBN ] [NP it/PRP ] [PP within/IN ] [NP a/DT few/JJ hours/NNS ] [PP on/IN ] [NP the/DT same/JJ day/NN ] [PP with/IN ] [NP the/DT release/NN ] [PP of/IN ] [NP Signal/NNP ] [PP for/IN ] [NP Android/NNP v4.47.7/CD ] ,/, [NP the/DT company/NN ] [VP confirmed/VBD ] [NP The/DT Hacker/NNP News/NNP ] ./.
-
-
-What's your take? 
-What - WP
-
-'s - VBZ
-
-your - PRP$
-
-take - VB
-
-? - .
-
- [NP What/WP ] [VP 's/VBZ ] [NP your/PRP$ ] [VP take/VB ] ?/.
-
-
-Let me write it down for you again—go and install the latest available update of Signal Private Messenger app from Google Play Store and make sure you always run up-to-date apps on your Android and iOS devices.
-Let - VB
-
-me - PRP
-
-write - VB
-
-it - PRP
-
-down - RP
-
-for - IN
-
-you - PRP
-
-agai - VBP
-
-n— - RB
-
-go - VB
-
-and - CC
-
-install - VB
-
-the - DT
-
-latest - JJS
-
-available - JJ
-
-update - NN
-
-of - IN
-
-Signal - NNP
-
-Private - JJ
-
-Messenger - NNP
-
-app - VBP
-
-from - IN
-
-Google - NNP
-
-Play - NNP
-
-Store - NNP
-
-and - CC
-
-make - VB
-
-sure - JJ
-
-you - PRP
-
-always - RB
-
-run - VB
-
-up-to-date - JJ
-
-apps - NNS
-
-on - IN
-
-your - PRP$
-
-Android - NNP
-
-and - CC
-
-iOS - NNP
-
-devices - NNS
-
-. - .
-
- [VP Let/VB ] [NP me/PRP ] [VP write/VB it/PRP ] [PRT down/RP ] [SBAR for/IN ] [NP you/PRP ] [VP agai/VBP n—/RB go/VB and/CC install/VB ] [NP the/DT latest/JJS available/JJ update/NN ] [PP of/IN ] [NP Signal/NNP Private/JJ Messenger/NNP app/VBP ] [PP from/IN ] [NP Google/NNP Play/NNP Store/NNP ] and/CC [VP make/VB ] [NP sure/JJ ] [NP you/PRP ] [ADVP always/RB ] [VP run/VB ] [NP up-to-date/JJ apps/NNS ] [PP on/IN ] [NP your/PRP$ Android/NNP and/CC iOS/NNP devices/NNS ] ./.
+ Once/RB [NP your/PRP$ multiplayer/NN farm/NN ] [VP is/VBZ running/VBG ] [PP like/IN ] [NP clockwork/NN ] ,/, [NP you/PRP ] [VP can/MD expand/VB ] [NP your/PRP$ operation/NN ] [PP into/IN ] [NP the/DT modded/JJ zone/NN ] [PP with/IN ] [NP the/DT multiplayer/JJ mods/NNS ] [VP linked/VBN ] [NP abov/RB e/NN ] !/.
 
 

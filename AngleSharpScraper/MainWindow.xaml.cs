@@ -23,7 +23,7 @@ namespace AngleSharpScraper
 
         private string ArticleTitle { get; set; }
         private string Url { get; set; }
-        public string[] QueryTerms { get; } = { "SIM", "iOS", "Exploit", "APT Map" };
+        public string[] QueryTerms { get; set; }
 
         public Dictionary<string, List<Tuple<string, string>>> termToScrapeDictionary = new Dictionary<string, List<Tuple<string, string>>>();
 
@@ -235,6 +235,8 @@ namespace AngleSharpScraper
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)
         {
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
+
+            QueryTerms = queryTermsTextBox.Text.Split(';');
             ScrapeWebsite();
         }
     }
