@@ -22,8 +22,6 @@ namespace AngleSharpScraper
     {
         private string siteUrl = "https://thehackernews.com/";
         public int numberOfPages;
-        private string articleTitle;
-        private string url;
         public string[] queryTerms;
 
         public Dictionary<string, List<Tuple<string, string>>> termToScrapeDictionary = new Dictionary<string, List<Tuple<string, string>>>();
@@ -43,7 +41,7 @@ namespace AngleSharpScraper
                 cancellationToken.Token.ThrowIfCancellationRequested();
 
                 IHtmlDocument document = parser.ParseDocument(response);
-                GetScrapeResults(document);
+                FillResultsDictionary(document.All.Where(x => x.ClassName == "story-link"));
 
                 siteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")
                     .FirstOrDefault()?
@@ -104,50 +102,45 @@ namespace AngleSharpScraper
             e.Handled = true;
         }
 
-        private void GetScrapeResults(IHtmlDocument document)
+        public void FillResultsDictionary(IEnumerable<IElement> articleLinksList)
         {
-            List<IElement> articleLink = new List<IElement>();
-            foreach (var term in queryTerms)
+            foreach (var result in articleLinksList)
             {
-                articleLink = document.All.Where(x => x.ClassName == "story-link" && (x.InnerHtml.Contains(term) || 
-                        x.InnerHtml.Contains(term.ToLower()))).ToList();
+                Tuple<string, string> urlTitleTuple = CleanUpResults(result);
+                string url = urlTitleTuple.Item1;
+                string articleTitle = urlTitleTuple.Item2;
 
-                FillResultsDictionary(term, articleLink);
-            }
-        }
-
-        public void FillResultsDictionary(string term, IEnumerable<IElement> articleLink)
-        {
-            foreach (var result in articleLink)
-            {
-                CleanUpResults(result);
-                if (!string.IsNullOrWhiteSpace(articleTitle) && !string.IsNullOrWhiteSpace(url))
+                foreach (var term in queryTerms)
                 {
-                    string currentLine = $"{articleTitle}{Environment.NewLine} " +
-                        $"- {url}{Environment.NewLine}{Environment.NewLine}";
+                    if (!string.IsNullOrWhiteSpace(articleTitle) && !string.IsNullOrWhiteSpace(url))
+                    {
+                        List<string> tokenizedTitle = OpenNLP.APIOpenNLP.TokenizeSentence(articleTitle).Select(token => token.ToLower()).ToList();
 
-                    if (!termToScrapeDictionary.ContainsKey(term))
-                        termToScrapeDictionary[term] = new List<Tuple<string, string>>();
+                        if (!tokenizedTitle.Contains(term.ToLower()))
+                            continue;
 
-                    termToScrapeDictionary[term].Add(new Tuple<string, string>(articleTitle, url));
+                        if (!termToScrapeDictionary.ContainsKey(term))
+                            termToScrapeDictionary[term] = new List<Tuple<string, string>>();
+
+                        termToScrapeDictionary[term].Add(new Tuple<string, string>(articleTitle, url));
+                    }
                 }
             }
         }
 
-        private void CleanUpResults(IElement result)
+        private Tuple<string, string> CleanUpResults(IElement result)
         {
             string htmlResult = result.OuterHtml.ReplaceFirst("<a class=\"story-link\" href=\"", "");
             htmlResult = htmlResult.ReplaceFirst("\">", "");
             htmlResult = htmlResult.ReplaceFirst("\n<div class=\"clear home-post-box cf\">\n<div class=\"home-img clear\">\n<div class=\"img-ratio\"><img alt=\"", " * ");
             htmlResult = htmlResult.ReplaceFirst("\" class=\"home-img-src lazyload\"", "*");       
-            SplitResults(htmlResult);
+            return SplitResults(htmlResult);
         }
 
-        private void SplitResults(string htmlResult)
+        private Tuple<string, string> SplitResults(string htmlResult)
         {
             string[] splitResults = htmlResult.Split('*');
-            url = splitResults[0];
-            articleTitle = splitResults[1];
+            return new Tuple<string, string>(splitResults[0], splitResults[1]);
         }
 
         public MainWindow()
