@@ -7,8 +7,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition/>
-                <RowDefinition Height="3"/>
-                <RowDefinition Height="3*"/>
+                <RowDefinition Height="2.5*"/>
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
@@ -18,28 +17,17 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="0" Grid.Column="0" Margin="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition Height="4*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Query terms" HorizontalAlignment="Center"/>
+            <GroupBox Header="Query Terms" Grid.Row="0" Grid.Column="0" Margin="5">
                 <TextBox Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Grid.Row="1" Margin="5"/>
-            </Grid>
+            </GroupBox>
 
-            <Separator Grid.Row="1" Grid.ColumnSpan="3">
-                <Separator.RenderTransform>
-                    <ScaleTransform ScaleY="3" />
-                </Separator.RenderTransform>
-            </Separator>
-
-            <GroupBox Header="Results" Grid.Row="2" Grid.ColumnSpan="3" Margin="5">
+            <GroupBox Header="Results" Grid.Row="1" Grid.ColumnSpan="3" Margin="5">
                 <ScrollViewer Margin="5">
                     <StackPanel Name="resultsStackPanel" Orientation="Vertical"/>
                 </ScrollViewer>
             </GroupBox>
 
-            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Click="ScrapWebsiteEvent" Width="100" Content="Scrape" Margin="5"/>
             <fa:ImageAwesome Name="spinnerControl" Visibility="Collapsed" Height="20" Icon="Spinner" Spin="True" SpinDuration="4" />
         </StackPanel>
