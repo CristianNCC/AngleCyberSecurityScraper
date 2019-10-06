@@ -2,98 +2,85 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Threading;
-using System.Net.Http;
-using AngleSharp.Html.Parser;
-using AngleSharp.Html.Dom;
-using System.IO;
 using AngleSharp.Dom;
-using AngleSharp.Text;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Diagnostics;
 using System.Windows.Navigation;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
+using AngleSharp.Html.Dom;
+using System.Threading.Tasks;
 
 namespace AngleSharpScraper
 {
     public partial class MainWindow : Window
     {
-        private string siteUrl = "https://thehackernews.com/";
         public int numberOfPages;
-        public string[] queryTerms;
+        public List<string> queryTerms;
+        List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
 
-        public Dictionary<string, List<Tuple<string, string>>> termToScrapeDictionary = new Dictionary<string, List<Tuple<string, string>>>();
+        // List of dictionaries where Key=Term and list of tuples <url, articleTitle>
+        public List<Dictionary<string, List<Tuple<string, string>>>> listTermToScrapeDictionary = 
+            new List<Dictionary<string, List<Tuple<string, string>>>>();
 
-        internal async void ScrapeWebsite()
+        private async void StartScraping()
         {
-            CancellationTokenSource cancellationToken = new CancellationTokenSource();
-            HttpClient httpClient = new HttpClient();
-            HtmlParser parser = new HtmlParser();
-
-            for (int iPageIdx = 0; iPageIdx < numberOfPages; iPageIdx++)
+            for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
-                HttpResponseMessage request = await httpClient.GetAsync(siteUrl);
-                cancellationToken.Token.ThrowIfCancellationRequested();
+                Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsites[iWebsiteIdx].ScrapeWebsite(numberOfPages);
+                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;
 
-                Stream response = await request.Content.ReadAsStreamAsync();
-                cancellationToken.Token.ThrowIfCancellationRequested();
-
-                IHtmlDocument document = parser.ParseDocument(response);
-                FillResultsDictionary(document.All.Where(x => x.ClassName == "story-link"));
-
-                siteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")
-                    .FirstOrDefault()?
-                    .OuterHtml.ReplaceFirst("<a class=\"blog-pager-older-link-mobile\" href=\"", "")
-                    .ReplaceFirst("\" id", "*")
-                    .Split('*').FirstOrDefault();
-
-                if (string.IsNullOrEmpty(siteUrl))
-                    break;
+                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string>>>());
+                foreach (var document in webDocuments)
+                {
+                    FillResultsDictionary(iWebsiteIdx, document.All.Where(x => x.ClassName == "story-link"), 
+                        scrapedWebsites[iWebsiteIdx].CleanUpResultsForUrlAndTitle);
+                }
             }
 
-            foreach (var termToScrape in termToScrapeDictionary)
+            foreach (var websiteDictionary in listTermToScrapeDictionary)
             {
-                List<Tuple<string, string>> termResults = termToScrape.Value;
-
-                GroupBox termGroupBox = new GroupBox()
+                foreach (var termToScrape in websiteDictionary)
                 {
-                    Header = termToScrape.Key,
-                    Content = new StackPanel()
-                    {
-                        Orientation = Orientation.Vertical,
-                        Margin = new Thickness(5, 5, 5, 5)
-                    }
-                };
+                    List<Tuple<string, string>> termResults = termToScrape.Value;
 
-                resultsStackPanel.Children.Add(termGroupBox);
-
-                for (int iTermResult = 0; iTermResult < termResults.Count; iTermResult++)
-                {
-                    TextBlock title = new TextBlock()
+                    GroupBox termGroupBox = new GroupBox()
                     {
-                        Text = termToScrapeDictionary[termToScrape.Key][iTermResult].Item1
+                        Header = termToScrape.Key,
+                        Content = new StackPanel()
+                        {
+                            Orientation = Orientation.Vertical,
+                            Margin = new Thickness(5, 5, 5, 5)
+                        }
                     };
 
-                    (termGroupBox.Content as StackPanel).Children.Add(title);
+                    resultsStackPanel.Children.Add(termGroupBox);
 
-                    Hyperlink hyperlink = new Hyperlink();
-                    hyperlink.Inlines.Add(termToScrapeDictionary[termToScrape.Key][iTermResult].Item2);
-                    hyperlink.NavigateUri = new Uri(termToScrapeDictionary[termToScrape.Key][iTermResult].Item2);
-                    hyperlink.RequestNavigate += Hyperlink_RequestNavigate;
+                    for (int iTermResult = 0; iTermResult < termResults.Count; iTermResult++)
+                    {
+                        TextBlock title = new TextBlock()
+                        {
+                            Text = websiteDictionary[termToScrape.Key][iTermResult].Item1
+                        };
 
-                    TextBlock urlTextBlock = new TextBlock();
-                    urlTextBlock.Inlines.Add(hyperlink);
-                    urlTextBlock.Margin = new Thickness(5, 5, 5, 10);
+                        (termGroupBox.Content as StackPanel).Children.Add(title);
 
-                    (termGroupBox.Content as StackPanel).Children.Add(urlTextBlock);
+                        Hyperlink hyperlink = new Hyperlink();
+                        hyperlink.Inlines.Add(websiteDictionary[termToScrape.Key][iTermResult].Item2);
+                        hyperlink.NavigateUri = new Uri(websiteDictionary[termToScrape.Key][iTermResult].Item2);
+                        hyperlink.RequestNavigate += Hyperlink_RequestNavigate;
+
+                        TextBlock urlTextBlock = new TextBlock();
+                        urlTextBlock.Inlines.Add(hyperlink);
+                        urlTextBlock.Margin = new Thickness(5, 5, 5, 10);
+
+                        (termGroupBox.Content as StackPanel).Children.Add(urlTextBlock);
+                    }
                 }
             }
 
             spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
-            httpClient.Dispose();
-            cancellationToken.Dispose();
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
@@ -102,7 +89,7 @@ namespace AngleSharpScraper
             e.Handled = true;
         }
 
-        public void FillResultsDictionary(IEnumerable<IElement> articleLinksList)
+        public void FillResultsDictionary(int websiteIdx, IEnumerable<IElement> articleLinksList, Func<IElement, Tuple<string, string>> CleanUpResults)
         {
             foreach (var result in articleLinksList)
             {
@@ -119,44 +106,35 @@ namespace AngleSharpScraper
                         if (!tokenizedTitle.Contains(term.ToLower()))
                             continue;
 
-                        if (!termToScrapeDictionary.ContainsKey(term))
-                            termToScrapeDictionary[term] = new List<Tuple<string, string>>();
+                        if (!listTermToScrapeDictionary[websiteIdx].ContainsKey(term))
+                            listTermToScrapeDictionary[websiteIdx][term] = new List<Tuple<string, string>>();
 
-                        termToScrapeDictionary[term].Add(new Tuple<string, string>(articleTitle, url));
+                        listTermToScrapeDictionary[websiteIdx][term].Add(new Tuple<string, string>(articleTitle, url));
                     }
                 }
             }
         }
 
-        private Tuple<string, string> CleanUpResults(IElement result)
-        {
-            string htmlResult = result.OuterHtml.ReplaceFirst("<a class=\"story-link\" href=\"", "");
-            htmlResult = htmlResult.ReplaceFirst("\">", "");
-            htmlResult = htmlResult.ReplaceFirst("\n<div class=\"clear home-post-box cf\">\n<div class=\"home-img clear\">\n<div class=\"img-ratio\"><img alt=\"", " * ");
-            htmlResult = htmlResult.ReplaceFirst("\" class=\"home-img-src lazyload\"", "*");       
-            return SplitResults(htmlResult);
-        }
-
-        private Tuple<string, string> SplitResults(string htmlResult)
-        {
-            string[] splitResults = htmlResult.Split('*');
-            return new Tuple<string, string>(splitResults[0], splitResults[1]);
-        }
-
         public MainWindow()
         {
             InitializeComponent();
+            LoadUpSupportedWebsites();
+        }
+
+        private void LoadUpSupportedWebsites()
+        {
+            scrapedWebsites.Add(new HackerNews());
         }
 
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)
         {
-            termToScrapeDictionary.Clear();
+            listTermToScrapeDictionary.Clear();
             resultsStackPanel.Children.Clear();
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
 
             int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
-            queryTerms = queryTermsTextBox.Text.Split(';');
-            ScrapeWebsite();
+            queryTerms = queryTermsTextBox.Text.Split(';').ToList();
+            StartScraping();
         }
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
