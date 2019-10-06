@@ -1,0 +1,57 @@
+﻿<Window x:Class="NLPWebScraper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        Title="HackerNews Scraper" Height="450" Width="800">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="2.5*"/>
+                <RowDefinition Height="30"/>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Query Terms" Grid.Row="0" Grid.Column="0" Margin="5">
+                <TextBox Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Grid.Row="1" Margin="5" BorderThickness="0"/>
+            </GroupBox>
+
+            <GroupBox Header="Web Scraping" Grid.Row="0" Grid.Column="1" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Number of Pages:" Margin="5" VerticalAlignment="Center"/>
+                    <TextBox Name="numberOfPagesTextBox" Text="50" Grid.Row="0" Grid.Column="1" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="PDF Content" Grid.Row="0" Grid.Column="2" Margin="5">
+                
+            </GroupBox>
+
+            <GroupBox Header="Results" Grid.Row="1" Grid.ColumnSpan="3" Margin="5">
+                <ScrollViewer Margin="5">
+                    <StackPanel Name="resultsStackPanel" Orientation="Vertical"/>
+                </ScrollViewer>
+            </GroupBox>
+
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Click="ScrapWebsiteEvent" Width="100" Content="Scrape" Margin="5"/>
+            <fa:ImageAwesome Name="spinnerControl" Visibility="Collapsed" Height="20" Icon="Spinner" Spin="True" SpinDuration="4" />
+        </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
