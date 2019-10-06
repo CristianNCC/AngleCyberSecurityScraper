@@ -13,7 +13,7 @@ namespace OpenNLP
         {
             if (mSentenceDetector == null)
             {
-                mSentenceDetector = new Tools.SentenceDetect.EnglishMaximumEntropySentenceDetector("EnglishSD.nbin");
+                mSentenceDetector = new Tools.SentenceDetect.EnglishMaximumEntropySentenceDetector("../../../SharpNLP Training Data/EnglishSD.nbin");
             }
 
             return mSentenceDetector.SentenceDetect(paragraph);
@@ -23,7 +23,7 @@ namespace OpenNLP
         {
             if (mTokenizer == null)
             {
-                mTokenizer = new Tools.Tokenize.EnglishMaximumEntropyTokenizer("EnglishTok.nbin");
+                mTokenizer = new Tools.Tokenize.EnglishMaximumEntropyTokenizer("../../../SharpNLP Training Data/EnglishTok.nbin");
             }
 
             return mTokenizer.Tokenize(sentence);
@@ -33,7 +33,7 @@ namespace OpenNLP
         {
             if (mPosTagger == null)
             {
-                mPosTagger = new Tools.PosTagger.EnglishMaximumEntropyPosTagger("EnglishPOS.nbin");
+                mPosTagger = new Tools.PosTagger.EnglishMaximumEntropyPosTagger("../../../SharpNLP Training Data/EnglishPOS.nbin");
             }
 
             return mPosTagger.Tag(tokens);
@@ -43,7 +43,7 @@ namespace OpenNLP
         {
             if (mChunker == null)
             {
-                mChunker = new Tools.Chunker.EnglishTreebankChunker("EnglishChunk.nbin");
+                mChunker = new Tools.Chunker.EnglishTreebankChunker("../../../SharpNLP Training Data/EnglishChunk.nbin");
             }
 
             return mChunker.GetChunks(tokens, postags);
