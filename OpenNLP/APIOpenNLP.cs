@@ -8,6 +8,7 @@ namespace OpenNLP
         private static Tools.Tokenize.EnglishMaximumEntropyTokenizer mTokenizer;
         private static Tools.PosTagger.EnglishMaximumEntropyPosTagger mPosTagger;
         private static Tools.Chunker.EnglishTreebankChunker mChunker;
+        private static Tools.SentimentAnalysis.AFINNLexicon mAFINNLexicon;
 
         public static string[] SplitSentences(string paragraph)
         {
@@ -47,6 +48,16 @@ namespace OpenNLP
             }
 
             return mChunker.GetChunks(tokens, postags);
+        }
+
+        public static int AFINNAnalysis(string[] sentence)
+        {
+            if (mChunker == null)
+            {
+                mAFINNLexicon = new Tools.SentimentAnalysis.AFINNLexicon("../../../AFINN Lexicon/AFINN.txt");
+            }
+
+            return mAFINNLexicon.SentimentallyTagSentence(sentence);
         }
 
         public static SharpEntropy.GisModel TrainLanguageModel(string trainingDataFile)

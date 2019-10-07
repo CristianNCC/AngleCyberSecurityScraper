@@ -20,9 +20,9 @@ namespace NLPWebScraper
         public List<string> queryTerms;
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
 
-        // List of dictionaries where Key=Term and list of tuples <url, articleTitle>
-        public List<Dictionary<string, List<Tuple<string, string>>>> listTermToScrapeDictionary = 
-            new List<Dictionary<string, List<Tuple<string, string>>>>();
+        // List of dictionaries where Key=Term and list of tuples <url, articleTitle, titlePolarity>
+        public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = 
+            new List<Dictionary<string, List<Tuple<string, string, int>>>>();
 
         private async void StartScraping()
         {
@@ -31,7 +31,7 @@ namespace NLPWebScraper
                 Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsites[iWebsiteIdx].ScrapeWebsite(numberOfPages);
                 List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;
 
-                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string>>>());
+                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());
                 foreach (var document in webDocuments)
                 {
                     FillResultsDictionary(iWebsiteIdx, document.All.Where(x => x.ClassName == "story-link"), 
@@ -43,7 +43,7 @@ namespace NLPWebScraper
             {
                 foreach (var termToScrape in websiteDictionary)
                 {
-                    List<Tuple<string, string>> termResults = termToScrape.Value;
+                    List<Tuple<string, string, int>> termResults = termToScrape.Value;
 
                     GroupBox termGroupBox = new GroupBox()
                     {
@@ -57,18 +57,20 @@ namespace NLPWebScraper
 
                     resultsStackPanel.Children.Add(termGroupBox);
 
-                    for (int iTermResult = 0; iTermResult < termResults.Count; iTermResult++)
+                    List<Tuple<string, string, int>> sortedResults = termResults.OrderBy(result => result.Item3).ToList();
+
+                    for (int iTermResult = 0; iTermResult < sortedResults.Count; iTermResult++)
                     {
                         TextBlock title = new TextBlock()
                         {
-                            Text = websiteDictionary[termToScrape.Key][iTermResult].Item1
+                            Text = " Polarity: (" + sortedResults[iTermResult].Item3.ToString() + "): " + sortedResults[iTermResult].Item1
                         };
 
                         (termGroupBox.Content as StackPanel).Children.Add(title);
 
                         Hyperlink hyperlink = new Hyperlink();
-                        hyperlink.Inlines.Add(websiteDictionary[termToScrape.Key][iTermResult].Item2);
-                        hyperlink.NavigateUri = new Uri(websiteDictionary[termToScrape.Key][iTermResult].Item2);
+                        hyperlink.Inlines.Add(sortedResults[iTermResult].Item2);
+                        hyperlink.NavigateUri = new Uri(sortedResults[iTermResult].Item2);
                         hyperlink.RequestNavigate += Hyperlink_RequestNavigate;
 
                         TextBlock urlTextBlock = new TextBlock();
@@ -106,10 +108,12 @@ namespace NLPWebScraper
                         if (!tokenizedTitle.Contains(term.ToLower()))
                             continue;
 
-                        if (!listTermToScrapeDictionary[websiteIdx].ContainsKey(term))
-                            listTermToScrapeDictionary[websiteIdx][term] = new List<Tuple<string, string>>();
+                        int sentencePolarity = sentencePolarity = OpenNLP.APIOpenNLP.AFINNAnalysis(tokenizedTitle.ToArray());
 
-                        listTermToScrapeDictionary[websiteIdx][term].Add(new Tuple<string, string>(articleTitle, url));
+                        if (!listTermToScrapeDictionary[websiteIdx].ContainsKey(term))
+                            listTermToScrapeDictionary[websiteIdx][term] = new List<Tuple<string, string, int>>();
+
+                        listTermToScrapeDictionary[websiteIdx][term].Add(new Tuple<string, string, int>(articleTitle, url, sentencePolarity));
                     }
                 }
             }
