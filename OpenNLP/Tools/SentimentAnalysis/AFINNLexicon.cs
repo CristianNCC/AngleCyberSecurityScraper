@@ -50,7 +50,7 @@ namespace OpenNLP.Tools.SentimentAnalysis
             string contentToWrite = string.Empty;
 
             foreach (var wordToPolarity in mWordToPolarityLexicon)
-                contentToWrite += wordToPolarity.Key + " " + wordToPolarity.Value + Environment.NewLine;
+                contentToWrite += wordToPolarity.Key + "\t" + wordToPolarity.Value + Environment.NewLine;
 
             System.IO.File.WriteAllText(mPathToLexicon, contentToWrite);
         }

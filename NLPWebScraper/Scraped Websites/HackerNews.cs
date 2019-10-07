@@ -28,9 +28,10 @@ namespace NLPWebScraper
             HttpClient httpClient = new HttpClient();
             HtmlParser parser = new HtmlParser();
 
+            string currentSiteUrl = siteUrl;
             for (int iPageIdx = 0; iPageIdx < numberOfPages; iPageIdx++)
             {
-                HttpResponseMessage request = await httpClient.GetAsync(siteUrl);
+                HttpResponseMessage request = await httpClient.GetAsync(currentSiteUrl);
                 cancellationToken.Token.ThrowIfCancellationRequested();
 
                 Stream response = await request.Content.ReadAsStreamAsync();
@@ -39,13 +40,13 @@ namespace NLPWebScraper
                 IHtmlDocument document = parser.ParseDocument(response);
                 webDocuments.Add(document);
 
-                siteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")
+                currentSiteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")
                     .FirstOrDefault()?
                     .OuterHtml.ReplaceFirst("<a class=\"blog-pager-older-link-mobile\" href=\"", "")
                     .ReplaceFirst("\" id", "*")
                     .Split('*').FirstOrDefault();
 
-                if (string.IsNullOrEmpty(siteUrl))
+                if (string.IsNullOrEmpty(currentSiteUrl))
                     break;
             }
 
