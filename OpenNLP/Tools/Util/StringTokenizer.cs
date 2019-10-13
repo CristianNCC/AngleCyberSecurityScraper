@@ -14,15 +14,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// Class providing simple tokenization of a string, for manipulation.  
-	/// For NLP tokenizing, see the OpenNLP.Tools.Tokenize namespace.
-	/// </summary>
-	public class StringTokenizer
+    /// <summary>
+    /// Class providing simple tokenization of a string, for manipulation.  
+    /// For NLP tokenizing, see the OpenNLP.Tools.Tokenize namespace.
+    /// </summary>
+    public class StringTokenizer
 	{
 		private const string mDelimiters = " \t\n\r";	//The tokenizer uses the default delimiter set: the space character, the tab character, the newline character, and the carriage-return character	
 		private string[] mTokens;

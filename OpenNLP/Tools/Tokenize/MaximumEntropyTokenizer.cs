@@ -33,20 +33,19 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace OpenNLP.Tools.Tokenize
 {
-	/// <summary>
-	/// A Tokenizer for converting raw text into separated tokens.  It uses
-	/// Maximum Entropy to make its decisions.  The features are loosely
-	/// based on Jeff Reynar's UPenn thesis "Topic Segmentation:
-	/// Algorithms and Applications.", which is available from his
-	/// homepage: http://www.cis.upenn.edu/~jcreynar.
-	/// </summary>
-	public class MaximumEntropyTokenizer : ITokenizer
+    /// <summary>
+    /// A Tokenizer for converting raw text into separated tokens.  It uses
+    /// Maximum Entropy to make its decisions.  The features are loosely
+    /// based on Jeff Reynar's UPenn thesis "Topic Segmentation:
+    /// Algorithms and Applications.", which is available from his
+    /// homepage: http://www.cis.upenn.edu/~jcreynar.
+    /// </summary>
+    public class MaximumEntropyTokenizer : ITokenizer
 	{
 		/// <summary>
 		/// the maximum entropy model to use to evaluate contexts.

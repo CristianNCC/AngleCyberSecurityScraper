@@ -33,14 +33,12 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Parser
 {
-	/// <summary>
-	/// Interface for encoding the head rules associated with parsing.
-	/// </summary>
-	public interface IHeadRules
+    /// <summary>
+    /// Interface for encoding the head rules associated with parsing.
+    /// </summary>
+    public interface IHeadRules
 	{
 		/// <summary>
 		/// Returns the head constituent for the specified constituents of the specified type.

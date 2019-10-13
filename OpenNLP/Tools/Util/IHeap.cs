@@ -33,18 +33,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// Inteface for interacting with a Heap data structure.
-	/// This implementation extract objects from smallest to largest based on either
-	/// their natural ordering or the comparator provided to an implementation.
-	/// While this is a typical of a heap it allows this objects natural ordering to
-	/// match that of other sorted collections.
-	/// </summary>
-	public interface IHeap<T>
+    /// <summary>
+    /// Inteface for interacting with a Heap data structure.
+    /// This implementation extract objects from smallest to largest based on either
+    /// their natural ordering or the comparator provided to an implementation.
+    /// While this is a typical of a heap it allows this objects natural ordering to
+    /// match that of other sorted collections.
+    /// </summary>
+    public interface IHeap<T>
 	{
 			
 		/// <summary>

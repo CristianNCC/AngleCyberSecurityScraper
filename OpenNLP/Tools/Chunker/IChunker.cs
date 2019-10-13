@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections;
 
 namespace OpenNLP.Tools.Chunker
 {
-	/// <summary>
-	/// The interface for chunkers which provide chunk tags for a sequence of tokens.
-	/// </summary>
-	public interface IChunker
+    /// <summary>
+    /// The interface for chunkers which provide chunk tags for a sequence of tokens.
+    /// </summary>
+    public interface IChunker
 	{
 		/// <summary>
 		/// Generates chunk tags for the given sequence returning the result in a list.

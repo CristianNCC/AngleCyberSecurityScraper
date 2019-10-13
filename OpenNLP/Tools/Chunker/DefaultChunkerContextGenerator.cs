@@ -33,20 +33,19 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.Chunker
 {
-	/// <summary>
-	/// Features based on chunking model described in Fei Sha and Fernando Pereira. Shallow 
-	/// parsing with conditional random fields. In Proceedings of HLT-NAACL 2003. Association 
-	/// for Computational Linguistics, 2003.
-	/// </summary>
-	/// <author> 
-	/// Tom Morton
-	/// </author>
-	public class DefaultChunkerContextGenerator : IChunkerContextGenerator
+    /// <summary>
+    /// Features based on chunking model described in Fei Sha and Fernando Pereira. Shallow 
+    /// parsing with conditional random fields. In Proceedings of HLT-NAACL 2003. Association 
+    /// for Computational Linguistics, 2003.
+    /// </summary>
+    /// <author> 
+    /// Tom Morton
+    /// </author>
+    public class DefaultChunkerContextGenerator : IChunkerContextGenerator
 	{
 		
 		/// <summary>

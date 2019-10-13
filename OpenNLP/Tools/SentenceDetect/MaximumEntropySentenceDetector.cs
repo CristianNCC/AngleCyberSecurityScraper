@@ -33,17 +33,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.SentenceDetect
 {
-	/// <summary>
-	/// A sentence detector for splitting up raw text into sentences.  A maximum
-	/// entropy model is used to evaluate the characters ".", "!", and "?" in a
-	/// string to determine if they signify the end of a sentence.
-	/// </summary>
-	public class MaximumEntropySentenceDetector : ISentenceDetector
+    /// <summary>
+    /// A sentence detector for splitting up raw text into sentences.  A maximum
+    /// entropy model is used to evaluate the characters ".", "!", and "?" in a
+    /// string to determine if they signify the end of a sentence.
+    /// </summary>
+    public class MaximumEntropySentenceDetector : ISentenceDetector
 	{
 		/// <summary>
 		/// The maximum entropy model to use to evaluate contexts.

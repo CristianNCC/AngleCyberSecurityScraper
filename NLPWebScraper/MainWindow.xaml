@@ -30,11 +30,13 @@
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="0.9*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Number of Pages:" Margin="5" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Static no. of Pages:" Margin="5" VerticalAlignment="Center"/>
                     <TextBox Name="numberOfPagesTextBox" Text="50" Grid.Row="0" Grid.Column="1" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+
+                    <CheckBox Name="dynamicScrapingCheckbox" Grid.Row="1" Grid.Column="0" Content="Dynamic Scraping" Margin="5"/>
                 </Grid>
             </GroupBox>
 

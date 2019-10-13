@@ -24,18 +24,30 @@ namespace NLPWebScraper
         public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = 
             new List<Dictionary<string, List<Tuple<string, string, int>>>>();
 
-        private async void StartScraping()
+        private async void DynamicScraping()
         {
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
-                Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsites[iWebsiteIdx].ScrapeWebsite(numberOfPages);
+                DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
+                await scrapedWebsite.DynamicScraping();
+            }
+        }
+
+        private async void StaticScraping()
+        {
+            for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
+            {
+                StaticallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as StaticallyScrapedWebsite;
+
+                Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsite.ScrapeWebsite(numberOfPages);
                 List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;
 
-                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());
+                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());       
+
                 foreach (var document in webDocuments)
                 {
-                    FillResultsDictionary(iWebsiteIdx, document.All.Where(x => x.ClassName == "story-link"), 
-                        scrapedWebsites[iWebsiteIdx].CleanUpResultsForUrlAndTitle);
+                    FillResultsDictionary(iWebsiteIdx, document.All.Where(x => x.ClassName == scrapedWebsite.storyClassName),
+                        scrapedWebsite.CleanUpResultsForUrlAndTitle);
                 }
             }
 
@@ -127,6 +139,8 @@ namespace NLPWebScraper
 
         private void LoadUpSupportedWebsites()
         {
+            //scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://abcnews.go.com/"));
+            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
             scrapedWebsites.Add(new HackerNews());
         }
 
@@ -138,7 +152,11 @@ namespace NLPWebScraper
 
             int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
             queryTerms = queryTermsTextBox.Text.Split(';').ToList();
-            StartScraping();
+
+            if (dynamicScrapingCheckbox.IsChecked == true)
+                DynamicScraping();
+            else
+                StaticScraping();
         }
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)

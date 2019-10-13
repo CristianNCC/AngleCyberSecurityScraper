@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary>
-	/// Provides a means of determining which tags are valid for a particular word based on a tag dictionary read from a file.
-	/// </summary>
-	public class PosLookupList
+    /// <summary>
+    /// Provides a means of determining which tags are valid for a particular word based on a tag dictionary read from a file.
+    /// </summary>
+    public class PosLookupList
 	{
 		private Dictionary<string, string[]> mDictionary;
 		private bool mIsCaseSensitive;

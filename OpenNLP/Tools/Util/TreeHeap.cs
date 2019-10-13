@@ -17,16 +17,14 @@
 //This file is based on the TreeHeap.java source file found in the
 //original java implementation of OpenNLP. 
 
-using System;
-
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// An implemention of the heap interface based on SortedSet.
-	/// This implementation will not allow multiple objects which are equal to be added to the heap.
-	/// Only use this implementation when object in the heap can be totally ordered (no duplicates). 
-	/// </summary>
-	public class TreeHeap<T> : IHeap<T>
+    /// <summary>
+    /// An implemention of the heap interface based on SortedSet.
+    /// This implementation will not allow multiple objects which are equal to be added to the heap.
+    /// Only use this implementation when object in the heap can be totally ordered (no duplicates). 
+    /// </summary>
+    public class TreeHeap<T> : IHeap<T>
 	{
 		
 		private SortedSet<T> mTree;

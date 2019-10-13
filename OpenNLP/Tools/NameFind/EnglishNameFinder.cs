@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using OpenNLP.Tools.Util;
 using OpenNLP.Tools.Parser;
 
 namespace OpenNLP.Tools.NameFind
 {
-	/// <summary> Class is used to create a name finder for English.</summary>
-	public class EnglishNameFinder 
+    /// <summary> Class is used to create a name finder for English.</summary>
+    public class EnglishNameFinder 
 	{
 		private Dictionary<string, MaximumEntropyNameFinder> mFinders;
 		private string mModelPath;

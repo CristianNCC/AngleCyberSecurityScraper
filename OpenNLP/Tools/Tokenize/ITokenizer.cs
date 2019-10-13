@@ -33,15 +33,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Tokenize
 {
-	/// <summary> 
-	/// The interface for tokenizers, which turn messy text into nicely segmented
-	/// text tokens.
-	/// </summary>
-	public interface ITokenizer
+    /// <summary> 
+    /// The interface for tokenizers, which turn messy text into nicely segmented
+    /// text tokens.
+    /// </summary>
+    public interface ITokenizer
 	{
 		/// <summary> 
 		/// Tokenize a string.

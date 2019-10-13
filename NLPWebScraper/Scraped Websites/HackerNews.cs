@@ -7,37 +7,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NLPWebScraper
 {
-    class HackerNews : ScrapedWebsite
+    class HackerNews : StaticallyScrapedWebsite
     {
-        public HackerNews()
+        public HackerNews(string siteUrl = "") : base(siteUrl)
         {
             siteUrl = "https://thehackernews.com/";
+            storyClassName = "story-link";
         }
 
         public override async Task<List<IHtmlDocument>> ScrapeWebsite(int numberOfPages)
         {
             List <IHtmlDocument> webDocuments = new List<IHtmlDocument>();
 
-            CancellationTokenSource cancellationToken = new CancellationTokenSource();
-            HttpClient httpClient = new HttpClient();
-            HtmlParser parser = new HtmlParser();
-
             string currentSiteUrl = siteUrl;
             for (int iPageIdx = 0; iPageIdx < numberOfPages; iPageIdx++)
-            {
-                HttpResponseMessage request = await httpClient.GetAsync(currentSiteUrl);
-                cancellationToken.Token.ThrowIfCancellationRequested();
+            {;
 
-                Stream response = await request.Content.ReadAsStreamAsync();
-                cancellationToken.Token.ThrowIfCancellationRequested();
-
-                IHtmlDocument document = parser.ParseDocument(response);
+                Task<IHtmlDocument> documentTask = GetDocumentFromLink(currentSiteUrl);
+                IHtmlDocument document = await documentTask;
                 webDocuments.Add(document);
 
                 currentSiteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")
@@ -49,9 +41,6 @@ namespace NLPWebScraper
                 if (string.IsNullOrEmpty(currentSiteUrl))
                     break;
             }
-
-            httpClient.Dispose();
-            cancellationToken.Dispose();
 
             return webDocuments;
         }

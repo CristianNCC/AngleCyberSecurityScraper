@@ -14,17 +14,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// This class contains methods to manage a sorted collection.
-	/// RN note: this class (taken from the JLCA "support" code) doesn't actually
-	/// sort anything.
-	/// </summary>
-	public class SortedSet<T> : Set<T>
+    /// <summary>
+    /// This class contains methods to manage a sorted collection.
+    /// RN note: this class (taken from the JLCA "support" code) doesn't actually
+    /// sort anything.
+    /// </summary>
+    public class SortedSet<T> : Set<T>
 	{
 		/// <summary>
 		/// Creates a new SortedSet.

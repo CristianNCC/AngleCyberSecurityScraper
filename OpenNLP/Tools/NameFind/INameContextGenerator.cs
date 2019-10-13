@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.NameFind
 {
-	/// <summary>
-	/// Context generator for the name find tool.
-	/// </summary>
-	public interface INameContextGenerator : OpenNLP.Tools.Util.IBeamSearchContextGenerator
+    /// <summary>
+    /// Context generator for the name find tool.
+    /// </summary>
+    public interface INameContextGenerator : OpenNLP.Tools.Util.IBeamSearchContextGenerator
 	{	
 		/// <summary>
 		/// Returns the contexts for chunking of the specified index.

@@ -33,16 +33,15 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace OpenNLP.Tools.Parser
 {
-	/// <summary>
-	/// Class for generating predictive context for deciding when a constituent is complete.
-	/// </summary>
-	public class CheckContextGenerator : SharpEntropy.IContextGenerator
+    /// <summary>
+    /// Class for generating predictive context for deciding when a constituent is complete.
+    /// </summary>
+    public class CheckContextGenerator : SharpEntropy.IContextGenerator
 	{
 		private const string mEndOfSentence = "eos";
 		

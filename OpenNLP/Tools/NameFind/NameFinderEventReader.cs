@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.NameFind
 {
-	/// <summary>
-	/// Class for creating a training event reader out of data files for training a name finder.
-	/// </summary>
-	public class NameFinderEventReader : SharpEntropy.ITrainingEventReader
+    /// <summary>
+    /// Class for creating a training event reader out of data files for training a name finder.
+    /// </summary>
+    public class NameFinderEventReader : SharpEntropy.ITrainingEventReader
 	{
 		private SharpEntropy.ITrainingDataReader<string> mDataReader;
 		private SharpEntropy.TrainingEvent[] mEvents;

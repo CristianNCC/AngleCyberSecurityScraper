@@ -33,15 +33,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.SentenceDetect
 {
-	/// <summary>
-	/// A sentence detector which uses a model trained on English data (Wall Street
-	/// Journal text).
-	/// </summary>
-	public class EnglishMaximumEntropySentenceDetector : MaximumEntropySentenceDetector
+    /// <summary>
+    /// A sentence detector which uses a model trained on English data (Wall Street
+    /// Journal text).
+    /// </summary>
+    public class EnglishMaximumEntropySentenceDetector : MaximumEntropySentenceDetector
 	{
 		/// <summary>
 		/// Constructor which loads the English sentence detection model

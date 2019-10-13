@@ -33,17 +33,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections;
 
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary>
-	/// A part-of-speech tagger that uses maximum entropy.  Trys to predict whether
-	/// words are nouns, verbs, or any of 70 other POS tags depending on their
-	/// surrounding context.
-	/// </summary>
-	public class MaximumEntropyPosTagger : IPosTagger
+    /// <summary>
+    /// A part-of-speech tagger that uses maximum entropy.  Trys to predict whether
+    /// words are nouns, verbs, or any of 70 other POS tags depending on their
+    /// surrounding context.
+    /// </summary>
+    public class MaximumEntropyPosTagger : IPosTagger
 	{
 		/// <summary>
 		/// The maximum entropy model to use to evaluate contexts.

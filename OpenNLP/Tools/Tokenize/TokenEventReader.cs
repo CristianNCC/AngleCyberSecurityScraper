@@ -33,17 +33,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace OpenNLP.Tools.Tokenize
 {
-	/// <summary>
-	/// Generate event contexts for maxent decisions for tokenization detection.
-	/// This is currently not used.
-	/// </summary>
-	public class TokenEventReader : SharpEntropy.ITrainingEventReader
+    /// <summary>
+    /// Generate event contexts for maxent decisions for tokenization detection.
+    /// This is currently not used.
+    /// </summary>
+    public class TokenEventReader : SharpEntropy.ITrainingEventReader
 	{
         private static readonly SharpEntropy.IContextGenerator<Util.Pair<string, int>> mContextGenerator = new TokenContextGenerator();
 		private StreamReader mStreamReader;

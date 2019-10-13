@@ -33,14 +33,12 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	///  Dinky class to package pairs of things
-	/// </summary>
-	public sealed class Pair<A, B>
+    /// <summary>
+    ///  Dinky class to package pairs of things
+    /// </summary>
+    public sealed class Pair<A, B>
 	{
 		private A mFirst;
 		private B mSecond;

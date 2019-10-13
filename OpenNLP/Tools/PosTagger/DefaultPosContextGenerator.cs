@@ -33,16 +33,15 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary> 
-	/// A context generator for the POS Tagger.
-	/// </summary>	
-	public class DefaultPosContextGenerator : IPosContextGenerator
+    /// <summary> 
+    /// A context generator for the POS Tagger.
+    /// </summary>	
+    public class DefaultPosContextGenerator : IPosContextGenerator
 	{
 		protected internal const string SentenceEnd = "*SE*";
 		protected internal const string SentenceBeginning = "*SB*";

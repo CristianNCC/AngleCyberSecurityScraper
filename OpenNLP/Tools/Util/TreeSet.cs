@@ -14,15 +14,14 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// This class manages a tree set collection of sorted elements.
-	/// </summary>
-	public class TreeSet<T> : SortedSet<T>
+    /// <summary>
+    /// This class manages a tree set collection of sorted elements.
+    /// </summary>
+    public class TreeSet<T> : SortedSet<T>
 	{
 		/// <summary>
 		/// Creates a new TreeSet.

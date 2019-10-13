@@ -33,19 +33,17 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.SentenceDetect
 {
-	/// <summary>
-	/// An implementation of ITrainingEventReader which assumes that it is receiving
-	/// its data as one (valid) sentence per token.  The default DataReader
-	/// to use with this class is PlainTextByLineDataReader, but you can
-	/// provide other types of ITrainingDataReaders if you wish to receive data from
-	/// sources other than plain text files; however, be sure that each
-	/// token your ITrainingDataReader returns is a valid sentence.
-	/// </summary>
-	public class SentenceDetectionEventReader : SharpEntropy.ITrainingEventReader
+    /// <summary>
+    /// An implementation of ITrainingEventReader which assumes that it is receiving
+    /// its data as one (valid) sentence per token.  The default DataReader
+    /// to use with this class is PlainTextByLineDataReader, but you can
+    /// provide other types of ITrainingDataReaders if you wish to receive data from
+    /// sources other than plain text files; however, be sure that each
+    /// token your ITrainingDataReader returns is a valid sentence.
+    /// </summary>
+    public class SentenceDetectionEventReader : SharpEntropy.ITrainingEventReader
 	{
 		private SharpEntropy.ITrainingDataReader<string> mDataReader;
 		private string mNext;

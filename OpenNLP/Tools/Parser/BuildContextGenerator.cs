@@ -33,16 +33,15 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace OpenNLP.Tools.Parser
 {
-	/// <summary>
-	/// Class to generator predictive contexts for deciding how constituents should be combined together.
-	/// </summary>
-	public class BuildContextGenerator : SharpEntropy.IContextGenerator
+    /// <summary>
+    /// Class to generator predictive contexts for deciding how constituents should be combined together.
+    /// </summary>
+    public class BuildContextGenerator : SharpEntropy.IContextGenerator
 	{
 		
 		private const string mEndOfSentence = "eos";

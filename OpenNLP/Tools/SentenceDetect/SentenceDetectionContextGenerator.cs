@@ -33,14 +33,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.SentenceDetect
 {
-	/// <summary> 
-	/// Generate event contexts for maxent decisions for sentence detection.
-	/// </summary>
+    /// <summary> 
+    /// Generate event contexts for maxent decisions for sentence detection.
+    /// </summary>
     public class SentenceDetectionContextGenerator : SharpEntropy.IContextGenerator<Util.Pair<System.Text.StringBuilder, int>>
 	{		
 		private System.Text.StringBuilder mBuffer = new System.Text.StringBuilder();

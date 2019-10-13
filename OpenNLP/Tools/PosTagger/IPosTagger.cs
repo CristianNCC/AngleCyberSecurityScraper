@@ -17,15 +17,14 @@
 //This file is based on the POSTagger.java source file found in the
 //original java implementation of OpenNLP. 
 
-using System;
 using System.Collections;
 
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary> 
-	/// The interface for part of speech taggers.
-	/// </summary>
-	public interface IPosTagger
+    /// <summary> 
+    /// The interface for part of speech taggers.
+    /// </summary>
+    public interface IPosTagger
 	{
 		/// <summary>
 		/// Assigns the sentence of tokens pos tags.

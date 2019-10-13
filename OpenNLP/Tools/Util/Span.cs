@@ -33,15 +33,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-
 namespace OpenNLP.Tools.Util
 {
-	/// <summary>
-	/// Class for storing start and end integer offsets.  
-	/// </summary>
-	
-	public class Span : System.IComparable
+    /// <summary>
+    /// Class for storing start and end integer offsets.  
+    /// </summary>
+
+    public class Span : System.IComparable
 	{
 		private int mStart;
 		private int mEnd;

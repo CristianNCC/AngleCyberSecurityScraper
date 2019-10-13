@@ -33,14 +33,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.Tokenize
 {
-	/// <summary>
-	///  Generate events for maxent decisions for tokenization.
-	/// </summary>
+    /// <summary>
+    ///  Generate events for maxent decisions for tokenization.
+    /// </summary>
     public class TokenContextGenerator : SharpEntropy.IContextGenerator<Util.Pair<string, int>>
 	{
 		public const string SplitIndicator = "T";

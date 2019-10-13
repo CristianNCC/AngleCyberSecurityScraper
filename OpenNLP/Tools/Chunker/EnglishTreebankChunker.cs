@@ -33,20 +33,18 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-using System.Collections;
 using System.Text;
 
 namespace OpenNLP.Tools.Chunker
 {
-	/// <summary>
-	/// This is a chunker based on the CONLL chunking task which uses Penn Treebank constituents as the basis for the chunks.
-	/// See   http://cnts.uia.ac.be/conll2000/chunking/ for data and task definition.
-	/// </summary>
-	/// <author> 
-	/// Tom Morton
-	/// </author>
-	public class EnglishTreebankChunker : MaximumEntropyChunker
+    /// <summary>
+    /// This is a chunker based on the CONLL chunking task which uses Penn Treebank constituents as the basis for the chunks.
+    /// See   http://cnts.uia.ac.be/conll2000/chunking/ for data and task definition.
+    /// </summary>
+    /// <author> 
+    /// Tom Morton
+    /// </author>
+    public class EnglishTreebankChunker : MaximumEntropyChunker
 	{
 		/// <summary>
 		/// Creates an English Treebank Chunker which uses the specified model file.

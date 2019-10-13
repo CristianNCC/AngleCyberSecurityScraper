@@ -17,15 +17,12 @@
 //This file is based on the ChunkerContextGenerator.java source file found in the
 //original java implementation of OpenNLP.
 
-using System;
-using System.Collections;
-
 namespace OpenNLP.Tools.Chunker
 {
-	/// <summary>
-	/// Context generator interface for chunkers.
-	/// </summary>
-	public interface IChunkerContextGenerator : Util.IBeamSearchContextGenerator
+    /// <summary>
+    /// Context generator interface for chunkers.
+    /// </summary>
+    public interface IChunkerContextGenerator : Util.IBeamSearchContextGenerator
 	{
 		/// <summary>
 		/// Returns the contexts for chunking of the specified index.

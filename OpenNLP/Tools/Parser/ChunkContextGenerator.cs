@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.Parser
 {
-	/// <summary>
-	/// Creates predictive context for the pre-chunking phases of parsing.
-	/// </summary>
-	public class ChunkContextGenerator : Chunker.IChunkerContextGenerator
+    /// <summary>
+    /// Creates predictive context for the pre-chunking phases of parsing.
+    /// </summary>
+    public class ChunkContextGenerator : Chunker.IChunkerContextGenerator
 	{
 		private const string mEndOfSentence = "eos";
 		

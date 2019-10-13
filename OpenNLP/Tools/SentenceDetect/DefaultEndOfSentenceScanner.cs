@@ -33,18 +33,17 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenNLP.Tools.SentenceDetect
 {
-	/// <summary>
-	/// The default end of sentence scanner implements all of the
-	/// EndOfSentenceScanner methods in terms of the GetPositions(char[])
-	/// method.  It scans for
-	/// . ? ! "
-	/// </summary>
-	public class DefaultEndOfSentenceScanner : IEndOfSentenceScanner
+    /// <summary>
+    /// The default end of sentence scanner implements all of the
+    /// EndOfSentenceScanner methods in terms of the GetPositions(char[])
+    /// method.  It scans for
+    /// . ? ! "
+    /// </summary>
+    public class DefaultEndOfSentenceScanner : IEndOfSentenceScanner
 	{	
 		public static char[] GetEndOfSentenceCharacters()
 		{

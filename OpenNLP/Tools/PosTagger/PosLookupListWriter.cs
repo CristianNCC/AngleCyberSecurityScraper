@@ -33,16 +33,15 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary>
-	/// Class that helps generate part-of-speech lookup list files.
-	/// </summary>
-	public class PosLookupListWriter
+    /// <summary>
+    /// Class that helps generate part-of-speech lookup list files.
+    /// </summary>
+    public class PosLookupListWriter
 	{		
 		private string mDictionaryFile;
 		private Dictionary<string, Util.Set<string>> mDictionary;

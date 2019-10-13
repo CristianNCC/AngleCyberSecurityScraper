@@ -33,15 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections;
 
 namespace OpenNLP.Tools.NameFind
 {
-	/// <summary>
-	/// The interface for name finders which provide name tags for a sequence of tokens.
-	/// </summary>
-	public interface INameFinder
+    /// <summary>
+    /// The interface for name finders which provide name tags for a sequence of tokens.
+    /// </summary>
+    public interface INameFinder
 	{
 		/// <summary>
 		/// Generates name tags for the given sequence returning the result in a list.

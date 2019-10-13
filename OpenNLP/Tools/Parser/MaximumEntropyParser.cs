@@ -33,16 +33,14 @@
 //License along with this program; if not, write to the Free Software
 //Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OpenNLP.Tools.Parser
 {
-	/// <summary>
-	/// Class for a shift reduce style parser based on Adwait Ratnaparki's 1998 thesis.
-	/// </summary>
-	public class MaximumEntropyParser
+    /// <summary>
+    /// Class for a shift reduce style parser based on Adwait Ratnaparki's 1998 thesis.
+    /// </summary>
+    public class MaximumEntropyParser
 	{
 		/// <summary>
 		/// The maximum number of parses advanced from all preceding parses at each derivation step.

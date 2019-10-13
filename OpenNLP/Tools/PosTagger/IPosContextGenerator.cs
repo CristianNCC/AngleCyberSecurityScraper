@@ -33,15 +33,12 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-using System;
-using System.Collections;
-
 namespace OpenNLP.Tools.PosTagger
 {
-	/// <summary> 
-	/// The interface for a context generator for the POS Tagger.
-	/// </summary>	
-	public interface IPosContextGenerator : Util.IBeamSearchContextGenerator
+    /// <summary> 
+    /// The interface for a context generator for the POS Tagger.
+    /// </summary>	
+    public interface IPosContextGenerator : Util.IBeamSearchContextGenerator
 	{
 		new string[] GetContext(int position, object[] tokens, string[] previousTags, object[] additionalContext);
 	}
