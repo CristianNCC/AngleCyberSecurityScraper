@@ -1,11 +1,7 @@
 ﻿using AngleSharp.Html.Dom;
-using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NLPWebScraper
@@ -44,7 +40,7 @@ namespace NLPWebScraper
             return median;
         }
 
-        public async Task<List<IHtmlDocument>> DynamicScraping()
+        public async Task<List<List<AngleSharp.Dom.IElement>>> DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl);
             var mainPageLinks = mainPageDocument.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != siteUrl)
@@ -142,7 +138,15 @@ namespace NLPWebScraper
             // Tags that don't appear are not really interesting.
             templateFrequency = templateFrequency.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
 
-            return webDocuments;
+            // Filter away the elements that have no text content.
+            var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
+                .Where(element => !string.IsNullOrEmpty(element.TextContent) 
+                && (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlSpanElement || element is IHtmlHeadElement) || element is IHtmlTableRowElement)
+                .ToList()).ToList();
+
+            // TO DO: Stuff from paper 7.
+
+            return firstIterationFilteredDocuments;
         }
 
         public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections, string currrentLink)

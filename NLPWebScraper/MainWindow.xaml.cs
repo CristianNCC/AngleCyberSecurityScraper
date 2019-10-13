@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace NLPWebScraper
 {
@@ -29,7 +30,25 @@ namespace NLPWebScraper
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
                 DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
-                await scrapedWebsite.DynamicScraping();
+
+                if (scrapedWebsite == null)
+                    continue;
+
+                var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping();
+
+                string results = string.Empty;
+                foreach (var documentResult in dynamicScrapingResultList)
+                {
+                    foreach (var element in documentResult)
+                    {
+                        results += element.TextContent;
+                    }
+
+                    results += Environment.NewLine;
+                    results += Environment.NewLine;
+                }
+
+                File.WriteAllText("resultsBBC.txt", results);
             }
         }
 
@@ -139,9 +158,9 @@ namespace NLPWebScraper
 
         private void LoadUpSupportedWebsites()
         {
-            //scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://abcnews.go.com/"));
-            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
-            scrapedWebsites.Add(new HackerNews());
+            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://www.foxnews.com/"));
+            //scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
+            //scrapedWebsites.Add(new HackerNews());
         }
 
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)

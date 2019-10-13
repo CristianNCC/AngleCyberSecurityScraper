@@ -1,13 +1,10 @@
-﻿using System;
-using AngleSharp.Dom;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net.Http;
 using AngleSharp.Html.Parser;
 using System.IO;
-using System.Linq;
 
 namespace NLPWebScraper
 {
