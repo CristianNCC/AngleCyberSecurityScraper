@@ -12,7 +12,6 @@ namespace NLPWebScraper
     {
         public HackerNews(string siteUrl = "") : base(siteUrl)
         {
-            siteUrl = "https://thehackernews.com/";
             storyClassName = "story-link";
         }
 

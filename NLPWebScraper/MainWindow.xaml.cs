@@ -27,16 +27,14 @@ namespace NLPWebScraper
 
         private async void DynamicScraping()
         {
+            string results = string.Empty;
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
                 DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
-
                 if (scrapedWebsite == null)
                     continue;
 
                 var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping();
-
-                string results = string.Empty;
                 foreach (var documentResult in dynamicScrapingResultList)
                 {
                     foreach (var element in documentResult)
@@ -47,9 +45,10 @@ namespace NLPWebScraper
                     results += Environment.NewLine;
                     results += Environment.NewLine;
                 }
-
-                File.WriteAllText("resultsBBC.txt", results);
             }
+
+            File.WriteAllText("results.txt", results);
+            spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private async void StaticScraping()
@@ -57,11 +56,13 @@ namespace NLPWebScraper
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
                 StaticallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as StaticallyScrapedWebsite;
+                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());
+
+                if (scrapedWebsite == null)
+                    continue;
 
                 Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsite.ScrapeWebsite(numberOfPages);
-                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;
-
-                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());       
+                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;      
 
                 foreach (var document in webDocuments)
                 {
@@ -158,9 +159,8 @@ namespace NLPWebScraper
 
         private void LoadUpSupportedWebsites()
         {
-            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://www.foxnews.com/"));
-            //scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
-            //scrapedWebsites.Add(new HackerNews());
+            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
+            scrapedWebsites.Add(new HackerNews("https://thehackernews.com/"));
         }
 
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)

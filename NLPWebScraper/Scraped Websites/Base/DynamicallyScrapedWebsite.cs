@@ -20,7 +20,7 @@ namespace NLPWebScraper
 
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
-        public const int maximalSubdigraphSize = 8;
+        public const int maximalSubdigraphSize = 4;
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl)
         {
