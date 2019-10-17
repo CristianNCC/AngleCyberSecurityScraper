@@ -18,7 +18,10 @@
             </Grid.ColumnDefinitions>
 
             <GroupBox Header="Query Terms" Grid.Row="0" Grid.Column="0" Margin="5">
-                <TextBox Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Grid.Row="1" Margin="5" BorderThickness="0"/>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Grid.Row="1" Margin="5"/>
+                    <CheckBox Content="TF-IDF Cosine" Margin="5"/>
+                </StackPanel>
             </GroupBox>
 
             <GroupBox Header="Web Scraping" Grid.Row="0" Grid.Column="1" Margin="5">

@@ -107,6 +107,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Scraped Websites\Base\DynamicallyScrapedWebsite.cs" />
     <Compile Include="Scraped Websites\Base\ScrapedWebsite.cs" />
     <Compile Include="Scraped Websites\Base\StaticallyScrapedWebsite.cs" />

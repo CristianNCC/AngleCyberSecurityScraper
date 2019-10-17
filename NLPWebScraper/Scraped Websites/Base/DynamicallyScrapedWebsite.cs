@@ -21,24 +21,15 @@ namespace NLPWebScraper
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
         public const int maximalSubdigraphSize = 4;
+        public const float nodeDifferenceEpsilon = 0.1f;
+        public const float hyperLinkDensityThreshold = 0.333f; // default 0.333f
+        public const float textDensityThreshold = 0.5f; // default 0.5f
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl)
         {
 
         }
-        public static int GetMedian(List<int> sourceNumbers)
-        {
-            if (sourceNumbers == null || sourceNumbers.Count == 0)
-                throw new System.Exception("Median of empty array not defined.");
 
-            int[] sortedPNumbers = sourceNumbers.ToArray();
-            Array.Sort(sortedPNumbers);
-
-            int size = sortedPNumbers.Length;
-            int mid = size / 2;
-            int median = (size % 2 != 0) ? sortedPNumbers[mid] : (sortedPNumbers[mid] + sortedPNumbers[mid - 1]) / 2;
-            return median;
-        }
 
         public async Task<List<List<AngleSharp.Dom.IElement>>> DynamicScraping()
         {  
@@ -132,7 +123,7 @@ namespace NLPWebScraper
                 foreach (var pageDictionary in pagesFrequencyDictionaryList)
                     tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
 
-                templateFrequency[tagsArray[iTagIdx]] = GetMedian(tagValues);
+                templateFrequency[tagsArray[iTagIdx]] = tagValues.GetMedian();
             }
 
             // Tags that don't appear are not really interesting.
@@ -141,12 +132,85 @@ namespace NLPWebScraper
             // Filter away the elements that have no text content.
             var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
                 .Where(element => !string.IsNullOrEmpty(element.TextContent) 
-                && (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlSpanElement || element is IHtmlHeadElement) || element is IHtmlTableRowElement)
+                && (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlHeadElement))
                 .ToList()).ToList();
 
-            // TO DO: Stuff from paper 7.
 
-            return firstIterationFilteredDocuments;
+            // Node filtering from "Main content extraction from web pages based on node."
+            List<List<AngleSharp.Dom.IElement>> filteredDocumentNodes = new List<List<AngleSharp.Dom.IElement>>();
+            for (int iDocumentIdx = 0; iDocumentIdx < firstIterationFilteredDocuments.Count; iDocumentIdx++)
+            {
+                var document = firstIterationFilteredDocuments[iDocumentIdx];
+                filteredDocumentNodes.Add(new List<AngleSharp.Dom.IElement>());
+
+                // List of <element, text density, hyperlink density> tuples.
+                List<Tuple<AngleSharp.Dom.IElement, float, float>> documentFeatureAnalyis = new List<Tuple<AngleSharp.Dom.IElement, float, float>>();
+                for (int iNodeIdx = 0; iNodeIdx < document.Count; iNodeIdx++)
+                {
+                    var node = document[iNodeIdx];
+
+                    if (node.BaseUrl.Href.Contains("about") && node.BaseUrl.Href.Contains("blank"))
+                        node.BaseUrl.Href = string.Empty;
+
+                    documentFeatureAnalyis.Add(new Tuple<AngleSharp.Dom.IElement, float, float>(node, node.GetNodeTextDensity(), node.GetNodeHyperlinkDensity()));
+                }
+
+                /*
+                for (int iNodeIdx = 0; iNodeIdx < documentFeatureAnalyis.Count - 1; iNodeIdx++)
+                {
+                    var currentNode = documentFeatureAnalyis[iNodeIdx];
+                    var nextNode = documentFeatureAnalyis[iNodeIdx + 1];
+
+                    if (currentNode.IsSimilarWith(nextNode, nodeDifferenceEpsilon))
+                    {
+                        currentNode.Item1.TextContent += " " + nextNode.Item1.TextContent;
+                        documentFeatureAnalyis.RemoveAt(iNodeIdx + 1);
+                        iNodeIdx--;
+                    }
+                }
+                */
+
+                for (int iNodeIdx = 1; iNodeIdx < documentFeatureAnalyis.Count - 1; iNodeIdx++)
+                {
+                    var previousNode = documentFeatureAnalyis[iNodeIdx - 1];
+                    var currentNode = documentFeatureAnalyis[iNodeIdx];
+                    var nextNode = documentFeatureAnalyis[iNodeIdx + 1];
+
+                    if (currentNode.Item3 < hyperLinkDensityThreshold)
+                    {
+                        if (currentNode.Item2 < textDensityThreshold)
+                        {
+                            if (nextNode.Item2 < textDensityThreshold)
+                            {
+                                if (previousNode.Item2 < textDensityThreshold)
+                                {
+                                    documentFeatureAnalyis.RemoveAt(iNodeIdx);
+                                    iNodeIdx--;
+                                }
+                                else
+                                {
+                                    filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                                }
+                            }
+                            else
+                            {
+                                filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                            }
+                        }
+                        else
+                        {
+                            filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                        }
+                    }
+                    else
+                    {
+                        documentFeatureAnalyis.RemoveAt(iNodeIdx);
+                        iNodeIdx--;
+                    }
+                }
+            }
+
+            return filteredDocumentNodes;
         }
 
         public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections, string currrentLink)
@@ -154,7 +218,6 @@ namespace NLPWebScraper
             List<HashSet<string>> allCompleteSubdigraphs = new List<HashSet<string>>();
 
             int currentSubdigraph = 0;
-
             foreach (var pLink in processedLinks)
             {
                 allCompleteSubdigraphs.Add(new HashSet<string>());
