@@ -18,6 +18,18 @@ namespace NLPWebScraper
         public T end2;
     }
 
+    public class ScrapingResult
+    {
+        public AngleSharp.Dom.IElement element;
+        public float textDensity;
+
+        public ScrapingResult(AngleSharp.Dom.IElement element, float textDensity)
+        {
+            this.element = element;
+            this.textDensity = textDensity;
+        }
+    }
+
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
         public const int maximalSubdigraphSize = 4;
@@ -30,8 +42,7 @@ namespace NLPWebScraper
 
         }
 
-
-        public async Task<List<List<AngleSharp.Dom.IElement>>> DynamicScraping()
+        public async Task<List<List<ScrapingResult>>> DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl);
             var mainPageLinks = mainPageDocument.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != siteUrl)
@@ -137,11 +148,11 @@ namespace NLPWebScraper
 
 
             // Node filtering from "Main content extraction from web pages based on node."
-            List<List<AngleSharp.Dom.IElement>> filteredDocumentNodes = new List<List<AngleSharp.Dom.IElement>>();
+            List<List<ScrapingResult>> filteredDocumentNodes = new List<List<ScrapingResult>>();
             for (int iDocumentIdx = 0; iDocumentIdx < firstIterationFilteredDocuments.Count; iDocumentIdx++)
             {
                 var document = firstIterationFilteredDocuments[iDocumentIdx];
-                filteredDocumentNodes.Add(new List<AngleSharp.Dom.IElement>());
+                filteredDocumentNodes.Add(new List<ScrapingResult>());
 
                 // List of <element, text density, hyperlink density> tuples.
                 List<Tuple<AngleSharp.Dom.IElement, float, float>> documentFeatureAnalyis = new List<Tuple<AngleSharp.Dom.IElement, float, float>>();
@@ -154,21 +165,6 @@ namespace NLPWebScraper
 
                     documentFeatureAnalyis.Add(new Tuple<AngleSharp.Dom.IElement, float, float>(node, node.GetNodeTextDensity(), node.GetNodeHyperlinkDensity()));
                 }
-
-                /*
-                for (int iNodeIdx = 0; iNodeIdx < documentFeatureAnalyis.Count - 1; iNodeIdx++)
-                {
-                    var currentNode = documentFeatureAnalyis[iNodeIdx];
-                    var nextNode = documentFeatureAnalyis[iNodeIdx + 1];
-
-                    if (currentNode.IsSimilarWith(nextNode, nodeDifferenceEpsilon))
-                    {
-                        currentNode.Item1.TextContent += " " + nextNode.Item1.TextContent;
-                        documentFeatureAnalyis.RemoveAt(iNodeIdx + 1);
-                        iNodeIdx--;
-                    }
-                }
-                */
 
                 for (int iNodeIdx = 1; iNodeIdx < documentFeatureAnalyis.Count - 1; iNodeIdx++)
                 {
@@ -189,17 +185,17 @@ namespace NLPWebScraper
                                 }
                                 else
                                 {
-                                    filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                                    filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                                 }
                             }
                             else
                             {
-                                filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                                filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                             }
                         }
                         else
                         {
-                            filteredDocumentNodes[iDocumentIdx].Add(currentNode.Item1);
+                            filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                         }
                     }
                     else

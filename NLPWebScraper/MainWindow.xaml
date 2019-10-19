@@ -20,11 +20,12 @@
             <GroupBox Header="Query Terms" Grid.Row="0" Grid.Column="0" Margin="5">
                 <StackPanel Orientation="Vertical">
                     <TextBox Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Grid.Row="1" Margin="5"/>
-                    <CheckBox Content="TF-IDF Cosine" Margin="5"/>
+                    <!--"<CheckBox Content="TF-IDF Cosine" Margin="5"/>-->
+                    <CheckBox Name="dynamicScrapingCheckbox" Grid.Row="1" Grid.Column="0" Content="Dynamic Scraping" Click="ToggleScrapingMode" Margin="5"/>
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="Web Scraping" Grid.Row="0" Grid.Column="1" Margin="5">
+            <GroupBox Name="staticScrapingGroupBox" Header="Static Scraping" Grid.Row="0" Grid.Column="1" Margin="5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
@@ -38,13 +39,24 @@
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Static no. of Pages:" Margin="5" VerticalAlignment="Center"/>
                     <TextBox Name="numberOfPagesTextBox" Text="50" Grid.Row="0" Grid.Column="1" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-
-                    <CheckBox Name="dynamicScrapingCheckbox" Grid.Row="1" Grid.Column="0" Content="Dynamic Scraping" Margin="5"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="PDF Content" Grid.Row="0" Grid.Column="2" Margin="5">
-                
+            <GroupBox Name="dynamicScrapingGroupBox" Header="Dynamic scraping" Grid.Row="0" Grid.Column="2" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="4*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Target:"  Margin="5" VerticalAlignment="Center"/>
+                    <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com" Grid.Column="1" Margin="5" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                </Grid>
             </GroupBox>
 
             <GroupBox Header="Results" Grid.Row="1" Grid.ColumnSpan="3" Margin="5">

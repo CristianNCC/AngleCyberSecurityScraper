@@ -37,9 +37,9 @@ namespace NLPWebScraper
                 var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping();
                 foreach (var documentResult in dynamicScrapingResultList)
                 {
-                    foreach (var element in documentResult)
+                    foreach (var documentElement in documentResult)
                     {
-                        results += element.TextContent;
+                        results += documentElement.element.TextContent;
                     }
 
                     results += Environment.NewLine;
@@ -47,7 +47,12 @@ namespace NLPWebScraper
                 }
             }
 
-            File.WriteAllText("results.txt", results);
+            TextBox textbox = new TextBox()
+            {
+                Text = results
+            };
+
+            resultsStackPanel.Children.Add(textbox);
             spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
         }
 
@@ -159,7 +164,6 @@ namespace NLPWebScraper
 
         private void LoadUpSupportedWebsites()
         {
-            scrapedWebsites.Add(new DynamicallyScrapedWebsite("https://thehackernews.com/"));
             scrapedWebsites.Add(new HackerNews("https://thehackernews.com/"));
         }
 
@@ -173,7 +177,11 @@ namespace NLPWebScraper
             queryTerms = queryTermsTextBox.Text.Split(';').ToList();
 
             if (dynamicScrapingCheckbox.IsChecked == true)
+            {
+                scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
+                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text));
                 DynamicScraping();
+            }
             else
                 StaticScraping();
         }
@@ -182,6 +190,12 @@ namespace NLPWebScraper
         {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
+        }
+
+        private void ToggleScrapingMode(object sender, RoutedEventArgs e)
+        {
+            staticScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == false;
+            dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
         }
     }
 }
