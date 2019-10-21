@@ -61,7 +61,7 @@
 
             <GroupBox Header="Results" Grid.Row="1" Grid.ColumnSpan="3" Margin="5">
                 <ScrollViewer Margin="5">
-                    <StackPanel Name="resultsStackPanel" Orientation="Vertical"/>
+                    <StackPanel Name="resultsStackPanel" Orientation="Vertical" CanHorizontallyScroll="True"/>
                 </ScrollViewer>
             </GroupBox>
 

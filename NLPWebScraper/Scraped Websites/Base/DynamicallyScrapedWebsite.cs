@@ -18,6 +18,25 @@ namespace NLPWebScraper
         public T end2;
     }
 
+    public class DocumentScrapingResult
+    {
+        public string linkToPage;
+        public string title;
+        public List<ScrapingResult> scrapingResults;
+
+        public DocumentScrapingResult(string linkToPage, List<ScrapingResult> scrapingResults)
+        {
+            this.linkToPage = linkToPage;
+            this.scrapingResults = scrapingResults;
+        }
+
+        public DocumentScrapingResult()
+        {
+            this.linkToPage = string.Empty;
+            this.scrapingResults = new List<ScrapingResult>();
+        }
+    }
+
     public class ScrapingResult
     {
         public AngleSharp.Dom.IElement element;
@@ -28,21 +47,27 @@ namespace NLPWebScraper
             this.element = element;
             this.textDensity = textDensity;
         }
+        public ScrapingResult()
+        {
+            this.element = null;
+            this.textDensity = 0.0f;
+        }
     }
 
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
         public const int maximalSubdigraphSize = 4;
         public const float nodeDifferenceEpsilon = 0.1f;
-        public const float hyperLinkDensityThreshold = 0.333f; // default 0.333f
-        public const float textDensityThreshold = 0.5f; // default 0.5f
+        public const float hyperLinkDensityThreshold = 0.333f;
+        public const float textDensityThreshold = 0.5f; 
+        public const float thresholdStandardDeviance = 5.0f;
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl)
         {
 
         }
 
-        public async Task<List<List<ScrapingResult>>> DynamicScraping()
+        public async Task<List<DocumentScrapingResult>> DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl);
             var mainPageLinks = mainPageDocument.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != siteUrl)
@@ -55,8 +80,20 @@ namespace NLPWebScraper
             HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
             HashSet<string> bestCS = new HashSet<string>();
 
-            var mainPageDescendingList = mainPageLinks.ToList().OrderByDescending(x => x).ToList();
-            foreach (var link in mainPageDescendingList)
+            // Get the median for each group of tags and use it as a template.
+            Dictionary<string, int> templateFrequency = new Dictionary<string, int>();
+
+            // Get the DOM for the pages in the graph.
+            List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
+
+            // Eliminate links that are shorter than the starting URL.
+            mainPageLinks = mainPageLinks.Where(link => link.Length > siteUrl.Length).ToHashSet();
+
+            // Sort remaining links by length.
+            mainPageLinks = mainPageLinks.OrderByDescending(link => link.Length).ToHashSet();
+
+            HashSet<HashSet<string>> testedGraphs = new HashSet<HashSet<string>>();
+            foreach (var link in mainPageLinks)
             {
                 // Get the DOM of the current subpage.
                 var webPage = await GetSubPageFromLink(link);
@@ -83,58 +120,77 @@ namespace NLPWebScraper
                 // Get all complete subdigraphs.
                 List<HashSet<string>> allCompleteSubdigraphs = GetAllCompleteSubdigraphs(processedLinks, connections, link);
 
-                // Get maximal subdigraph of this iteration.
-                var iterationSubdigraph = allCompleteSubdigraphs.OrderByDescending(graph => graph.Count).FirstOrDefault();
-
-                if (iterationSubdigraph.Count == maximalSubdigraphSize)
+                bool foundSubdigraph = false;
+                foreach (var iterationSubdigraph in allCompleteSubdigraphs)
                 {
-                    // Found a good subdigraph, we can return;
-                    bestCS = iterationSubdigraph;
+                    if (iterationSubdigraph.Count >= maximalSubdigraphSize)
+                    {
+                        // Found a good subdigraph, we can return;
+                        bestCS = iterationSubdigraph;
+
+                        if (testedGraphs.Any(cs => cs.SetEquals(bestCS)))
+                            continue;
+
+                        foreach (var page in bestCS)
+                        {
+                            var webPageCS = await GetSubPageFromLink(page);
+                            webDocuments.Add(webPageCS);
+                        }
+
+                        // Compute the frequency dictionary for every DOM.
+                        var pagesFrequencyDictionaryList = webDocuments.Select(dom => dom.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count())).ToList();
+
+                        // Get a set of all the tags that appear.
+                        HashSet<string> allHTMLTags = new HashSet<string>();
+                        pagesFrequencyDictionaryList.ForEach(pageFrequencyDictionary => pageFrequencyDictionary.Keys.ToList().ForEach(tag => allHTMLTags.Add(tag)));
+
+                        // "Pad" the dictionaries with their respective missing entries.
+                        foreach (var pageDictionary in pagesFrequencyDictionaryList)
+                        {
+                            foreach (var tag in allHTMLTags)
+                            {
+                                if (!pageDictionary.Keys.Contains(tag))
+                                    pageDictionary[tag] = 0;
+                            }
+                        }
+
+                        // Check standard deviation average.
+                        Dictionary<string, double> templateStandardDeviation = new Dictionary<string, double>();
+
+                        var tagsArray = allHTMLTags.ToArray();
+                        for (int iTagIdx = 0; iTagIdx < allHTMLTags.Count; iTagIdx++)
+                        {
+                            List<int> tagValues = new List<int>();
+                            foreach (var pageDictionary in pagesFrequencyDictionaryList)
+                                tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
+
+                            templateFrequency[tagsArray[iTagIdx]] = tagValues.GetMedian();
+                            templateStandardDeviation[tagsArray[iTagIdx]] = tagValues.GetStandardDeviation();
+                        }
+
+                        double averageStandardDeviation = templateStandardDeviation.Values.Sum() / templateStandardDeviation.Values.Count;
+                        if (averageStandardDeviation > 0 && averageStandardDeviation < thresholdStandardDeviance)
+                        {
+                            foundSubdigraph = true;
+                            break;
+                        }
+                        else
+                        {
+                            testedGraphs.Add(new HashSet<string>(bestCS));
+                            templateFrequency.Clear();
+                            bestCS.Clear();
+                            webDocuments.Clear();
+                        }
+                    }
+                    else if (iterationSubdigraph.Count > bestCS.Count)
+                    {
+                        // Replace the best subdigraph if needed.
+                        bestCS = iterationSubdigraph;
+                    }
+                }
+
+                if (foundSubdigraph)
                     break;
-                }
-                else if (iterationSubdigraph.Count > bestCS.Count)
-                {
-                    // Replace the best subdigraph if needed.
-                    bestCS = iterationSubdigraph;
-                }
-            }
-
-            // Get the DOM for the pages in the graph.
-            List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
-            foreach (var page in bestCS)
-            {
-                var webPage = await GetSubPageFromLink(page); 
-                webDocuments.Add(webPage);
-            }
-
-            // Compute the frequency dictionary for every DOM.
-            var pagesFrequencyDictionaryList = webDocuments.Select(dom => dom.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count())).ToList();
-
-            // Get a set of all the tags that appear.
-            HashSet<string> allHTMLTags = new HashSet<string>();
-            pagesFrequencyDictionaryList.ForEach(pageFrequencyDictionary => pageFrequencyDictionary.Keys.ToList().ForEach(tag => allHTMLTags.Add(tag)));
-
-            // "Pad" the dictionaries with their respective missing entries.
-            foreach (var pageDictionary in pagesFrequencyDictionaryList)
-            {
-                foreach (var tag in allHTMLTags)
-                {
-                    if(!pageDictionary.Keys.Contains(tag))
-                        pageDictionary[tag] = 0;
-                }
-            }
-
-            // Get the median for each group of tags and use it as a template.
-            Dictionary<string, int> templateFrequency = new Dictionary<string, int>();
-
-            var tagsArray = allHTMLTags.ToArray();
-            for (int iTagIdx = 0; iTagIdx < allHTMLTags.Count; iTagIdx++)
-            {
-                List<int> tagValues = new List<int>();
-                foreach (var pageDictionary in pagesFrequencyDictionaryList)
-                    tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
-
-                templateFrequency[tagsArray[iTagIdx]] = tagValues.GetMedian();
             }
 
             // Tags that don't appear are not really interesting.
@@ -142,17 +198,20 @@ namespace NLPWebScraper
 
             // Filter away the elements that have no text content.
             var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
-                .Where(element => !string.IsNullOrEmpty(element.TextContent) 
+                .Where(element => !string.IsNullOrEmpty(element.TextContent)
                 && (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlHeadElement))
                 .ToList()).ToList();
 
 
             // Node filtering from "Main content extraction from web pages based on node."
-            List<List<ScrapingResult>> filteredDocumentNodes = new List<List<ScrapingResult>>();
+            List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
             for (int iDocumentIdx = 0; iDocumentIdx < firstIterationFilteredDocuments.Count; iDocumentIdx++)
             {
                 var document = firstIterationFilteredDocuments[iDocumentIdx];
-                filteredDocumentNodes.Add(new List<ScrapingResult>());
+
+                DocumentScrapingResult documentScrapingResult = new DocumentScrapingResult();
+                documentScrapingResult.title = webDocuments[iDocumentIdx].Title;
+                documentScrapingResult.linkToPage = bestCS.ToList()[iDocumentIdx];
 
                 // List of <element, text density, hyperlink density> tuples.
                 List<Tuple<AngleSharp.Dom.IElement, float, float>> documentFeatureAnalyis = new List<Tuple<AngleSharp.Dom.IElement, float, float>>();
@@ -185,17 +244,17 @@ namespace NLPWebScraper
                                 }
                                 else
                                 {
-                                    filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
+                                    documentScrapingResult.scrapingResults.Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                                 }
                             }
                             else
                             {
-                                filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
+                                documentScrapingResult.scrapingResults.Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                             }
                         }
                         else
                         {
-                            filteredDocumentNodes[iDocumentIdx].Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
+                            documentScrapingResult.scrapingResults.Add(new ScrapingResult(currentNode.Item1, currentNode.Item2));
                         }
                     }
                     else
@@ -204,6 +263,7 @@ namespace NLPWebScraper
                         iNodeIdx--;
                     }
                 }
+                filteredDocumentNodes.Add(documentScrapingResult);
             }
 
             return filteredDocumentNodes;
@@ -212,12 +272,9 @@ namespace NLPWebScraper
         public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections, string currrentLink)
         {
             List<HashSet<string>> allCompleteSubdigraphs = new List<HashSet<string>>();
-
-            int currentSubdigraph = 0;
             foreach (var pLink in processedLinks)
             {
-                allCompleteSubdigraphs.Add(new HashSet<string>());
-
+                HashSet<string> newCS = new HashSet<string>();
                 foreach (var connectionOne in connections)
                 {
                     if (connectionOne.end1 == pLink)
@@ -226,8 +283,8 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end2 == pLink && connectionTwo.end1 == connectionOne.end2)
                             {
-                                allCompleteSubdigraphs[currentSubdigraph].Add(connectionTwo.end1);
-                                allCompleteSubdigraphs[currentSubdigraph].Add(connectionTwo.end2);
+                                newCS.Add(connectionTwo.end1);
+                                newCS.Add(connectionTwo.end2);
                             }
                         }
                     }
@@ -237,14 +294,15 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end1 == pLink && connectionTwo.end2 == connectionOne.end1)
                             {
-                                allCompleteSubdigraphs[currentSubdigraph].Add(connectionTwo.end1);
-                                allCompleteSubdigraphs[currentSubdigraph].Add(connectionTwo.end2);
+                                newCS.Add(connectionTwo.end1);
+                                newCS.Add(connectionTwo.end2);
                             }
                         }
                     }
                 }
 
-                currentSubdigraph++;
+                if (!allCompleteSubdigraphs.Any(cs => cs.SetEquals(newCS)) && newCS.Count >= maximalSubdigraphSize)
+                    allCompleteSubdigraphs.Add(newCS);
             }
 
             return allCompleteSubdigraphs;

@@ -37,13 +37,18 @@ namespace NLPWebScraper
                 var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping();
                 foreach (var documentResult in dynamicScrapingResultList)
                 {
-                    foreach (var documentElement in documentResult)
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+
+                    foreach (var documentElement in documentResult.scrapingResults)
                     {
                         results += documentElement.element.TextContent;
                     }
 
-                    results += Environment.NewLine;
-                    results += Environment.NewLine;
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    results += "========================================================= END ==============================================================";
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                 }
             }
 
