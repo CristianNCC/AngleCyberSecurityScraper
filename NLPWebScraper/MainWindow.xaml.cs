@@ -51,7 +51,8 @@ namespace NLPWebScraper
 
             TextBox textbox = new TextBox()
             {
-                Text = results
+                Text = results,
+                TextWrapping = TextWrapping.Wrap
             };
 
             resultsStackPanel.Children.Add(textbox);

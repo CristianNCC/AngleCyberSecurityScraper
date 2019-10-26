@@ -66,6 +66,7 @@ namespace NLPWebScraper
 
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
+        public const int maximalWordCount = 20;
         public const int maximalSubdigraphSize = 4;
         public const float nodeDifferenceEpsilon = 0.1f;
         public const float hyperLinkDensityThreshold = 0.333f;
@@ -232,7 +233,7 @@ namespace NLPWebScraper
                 List<int> indexesToRemove = new List<int>();
                 for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
                 {
-                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")))
+                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")) || sentencesWords[sentenceIndex].Any(word => word.Length > maximalWordCount))
                         indexesToRemove.Add(sentenceIndex);
                 }
 
