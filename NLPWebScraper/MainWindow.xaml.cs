@@ -41,10 +41,7 @@ namespace NLPWebScraper
                     results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
-                    foreach (var documentElement in documentResult.scrapingResults)
-                    {
-                        results += documentElement.element.TextContent;
-                    }
+                    results += documentResult.content;
 
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                     results += "========================================================= END ==============================================================";

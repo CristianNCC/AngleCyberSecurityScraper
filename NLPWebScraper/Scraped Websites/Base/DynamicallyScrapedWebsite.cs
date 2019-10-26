@@ -22,18 +22,28 @@ namespace NLPWebScraper
     {
         public string linkToPage;
         public string title;
-        public List<ScrapingResult> scrapingResults;
+        public string content;
+        public List<ScrapingResult> scrapingResults = null;
 
-        public DocumentScrapingResult(string linkToPage, List<ScrapingResult> scrapingResults)
+        public List<List<string>> sentencesWords = null;
+        public List<List<string>> posSentences = null;
+
+        public DocumentScrapingResult(string linkToPage, List<ScrapingResult> scrapingResults, string content, List<List<string>> sentencesWords, List<List<string>> posSentences)
         {
             this.linkToPage = linkToPage;
             this.scrapingResults = scrapingResults;
+            this.content = content;
+            this.sentencesWords = sentencesWords;
+            this.posSentences = posSentences;
         }
 
         public DocumentScrapingResult()
         {
-            this.linkToPage = string.Empty;
-            this.scrapingResults = new List<ScrapingResult>();
+            linkToPage = string.Empty;
+            scrapingResults = new List<ScrapingResult>();
+            content = string.Empty;
+            sentencesWords = new List<List<string>>();
+            posSentences = new List<List<string>>();
         }
     }
 
@@ -59,14 +69,10 @@ namespace NLPWebScraper
         public const int maximalSubdigraphSize = 4;
         public const float nodeDifferenceEpsilon = 0.1f;
         public const float hyperLinkDensityThreshold = 0.333f;
-        public const float textDensityThreshold = 0.5f; 
+        public const float textDensityThreshold = 0.4f; 
         public const float thresholdStandardDeviance = 5.0f;
 
-        public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl)
-        {
-
-        }
-
+        public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
         public async Task<List<DocumentScrapingResult>> DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl);
@@ -196,15 +202,85 @@ namespace NLPWebScraper
             // Tags that don't appear are not really interesting.
             templateFrequency = templateFrequency.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
 
+            // Node filtering from "Main content extraction from web pages based on node."
+            List<DocumentScrapingResult> filteredDocumentNodes = NodeFiltering(bestCS, webDocuments);
+
+            // Remove all common strings from every document. Usually, this will be the text on different buttons.
+            FilterAllCommonStrings(filteredDocumentNodes);
+
+            // Aggregate all text content.
+            foreach (var documentResult in filteredDocumentNodes)
+            {
+                documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
+
+                var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
+
+                List<string> filteredSentences = new List<string>();
+                List<List<string>> sentencesWords = new List<List<string>>();
+                foreach (var sentence in sentences)
+                {
+                    var filteredSentence = sentence.Replace("\n", "");
+                    filteredSentences.Add(filteredSentence);
+
+                    sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
+                }
+
+                List<List<string>> posSentences = new List<List<string>>();
+                foreach (var sentenceWordList in sentencesWords)
+                    posSentences.Add(OpenNLP.APIOpenNLP.PosTagTokens(sentenceWordList.ToArray()).ToList());
+
+                List<int> indexesToRemove = new List<int>();
+                for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
+                {
+                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")))
+                        indexesToRemove.Add(sentenceIndex);
+                }
+
+                documentResult.content = string.Empty;
+                for (int index = 0; index < sentencesWords.Count; index++)
+                {
+                    if (indexesToRemove.Contains(index))
+                        continue;
+
+                    documentResult.sentencesWords.Add(sentencesWords[index]);
+                    documentResult.posSentences.Add(posSentences[index]);
+
+                    documentResult.content += filteredSentences[index] + Environment.NewLine;
+                }
+            }
+
+            return filteredDocumentNodes;
+        }
+
+        public List<DocumentScrapingResult> NodeFiltering(HashSet<string> bestCS, List<IHtmlDocument> webDocuments)
+        {
+            List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
+
             // Filter away the elements that have no text content.
             var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
-                .Where(element => !string.IsNullOrEmpty(element.TextContent)
-                && (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlHeadElement))
+                .Where(element => !string.IsNullOrEmpty(element.TextContent) && element is IHtmlDivElement)
                 .ToList()).ToList();
 
+            // Since some HTML elements contain one another, we need to filter out the common content.
+            foreach (var documentElements in firstIterationFilteredDocuments)
+            {
+                for (int iElementIdx = 0; iElementIdx < documentElements.Count; iElementIdx++)
+                {
+                    for (int iElementIdxTwo = 0; iElementIdxTwo < documentElements.Count; iElementIdxTwo++)
+                    {
+                        if (iElementIdx == iElementIdxTwo)
+                            continue;
 
-            // Node filtering from "Main content extraction from web pages based on node."
-            List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
+                        if (documentElements[iElementIdx].TextContent.Contains(documentElements[iElementIdxTwo].TextContent))
+                        {
+                            documentElements.RemoveAt(iElementIdxTwo);
+                            iElementIdx = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
             for (int iDocumentIdx = 0; iDocumentIdx < firstIterationFilteredDocuments.Count; iDocumentIdx++)
             {
                 var document = firstIterationFilteredDocuments[iDocumentIdx];
@@ -267,6 +343,19 @@ namespace NLPWebScraper
             }
 
             return filteredDocumentNodes;
+        }
+
+        public void FilterAllCommonStrings(List<DocumentScrapingResult> filteredDocumentNodes)
+        {
+            List<string> commonStrings = filteredDocumentNodes.FirstOrDefault()?.scrapingResults.Select(node => node.element.TextContent).ToList();
+            for (int iDocumentIdx = 1; iDocumentIdx < filteredDocumentNodes.Count; iDocumentIdx++)
+                commonStrings = commonStrings.Intersect(filteredDocumentNodes[iDocumentIdx].scrapingResults.Select(node => node.element.TextContent).ToList()).ToList();
+
+            foreach (var documentNodes in filteredDocumentNodes)
+            {
+                documentNodes.scrapingResults.ForEach(node => commonStrings.ForEach(commonString => node.element.TextContent = node.element.TextContent.Replace(commonString, string.Empty)));
+                documentNodes.scrapingResults = documentNodes.scrapingResults.Where(node => node.element.TextContent.Length > 0).ToList();
+            }
         }
 
         public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections, string currrentLink)
