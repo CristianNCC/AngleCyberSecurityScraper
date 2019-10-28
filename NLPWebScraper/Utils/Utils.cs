@@ -13,7 +13,7 @@ namespace NLPWebScraper
         {
             if (String.IsNullOrEmpty(a) && String.IsNullOrEmpty(b))
                 return 0;
-            
+
             if (String.IsNullOrEmpty(a))
                 return b.Length;
 
@@ -41,6 +41,59 @@ namespace NLPWebScraper
             }
 
             return distances[lengthA, lengthB];
+        }
+
+        public static List<int> AllIndexesOf(string content, string value)
+        {
+            if (String.IsNullOrEmpty(value))
+                return new List<int>();
+
+            List<int> indexes = new List<int>();
+            for (int index = 0; ; index += value.Length)
+            {
+                index = content.IndexOf(value, index);
+                if (index == -1)
+                    return indexes;
+
+                indexes.Add(index);
+            }
+        }
+
+        public static List<Tuple<int, int>> MergeToTuples(List<int> listOne, List<int> listTwo)
+        {
+            for (int index = 0; index < listOne.Count - 1; index++)
+            {
+                for (int indexTwo = 1; indexTwo < listTwo.Count; indexTwo++)
+                {
+                    if (index == indexTwo)
+                        continue;
+
+                    if (listTwo[indexTwo] < listOne[index + 1] && listTwo[indexTwo] > listOne[index])
+                    {
+                        listTwo.RemoveAt(indexTwo - 1);
+                        indexTwo--;
+                    }
+                }
+            }
+
+            if (listOne.Count != listTwo.Count)
+                return new List<Tuple<int, int>>();
+
+            List<Tuple<int, int>> tupleList = new List<Tuple<int, int>>();
+            for (int index = 0; index < listOne.Count; index++)
+                tupleList.Add(new Tuple<int, int>(listOne[index], listTwo[index]));
+
+            return tupleList;
+        }
+
+        public static List<string> GetNamedEntities(string content, string namedEntity, List<Tuple<int, int>> indexes)
+        {
+            List<string> namedEntities = new List<string>();
+
+            foreach (var index in indexes)
+                namedEntities.Add(content.Substring(index.Item1, index.Item2 - index.Item1));
+
+            return namedEntities;
         }
     }
 }

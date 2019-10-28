@@ -246,7 +246,7 @@ namespace NLPWebScraper
                     documentResult.sentencesWords.Add(sentencesWords[index]);
                     documentResult.posSentences.Add(posSentences[index]);
 
-                    documentResult.content += filteredSentences[index] + Environment.NewLine;
+                    documentResult.content += filteredSentences[index]; //+ Environment.NewLine;
                 }
             }
 

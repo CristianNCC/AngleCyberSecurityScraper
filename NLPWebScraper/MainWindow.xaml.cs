@@ -44,6 +44,32 @@ namespace NLPWebScraper
                     results += documentResult.content;
 
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    results += "============== Named Entities ==============";
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+
+                    var namedEntities = OpenNLP.APIOpenNLP.FindNames(documentResult.content);
+                    var dateListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<date>"), (Utils.AllIndexesOf(namedEntities, "</date>")));
+                    var personListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<person>"), (Utils.AllIndexesOf(namedEntities, "</person>")));
+                    var timeListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<time>"), (Utils.AllIndexesOf(namedEntities, "</time>")));
+                    var organizationListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<organization>"), (Utils.AllIndexesOf(namedEntities, "</organization>")));
+
+                    results += dateListTupleIndexes.Count > 0 ? "Dates: " : "";
+                    foreach (var tuple in dateListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != dateListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += personListTupleIndexes.Count > 0 ? "People: " : "";
+                    foreach (var tuple in personListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 8, (tuple.Item2 - 8) - tuple.Item1) + (tuple != personListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += timeListTupleIndexes.Count > 0 ? "Time: " : "";
+                    foreach (var tuple in timeListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != timeListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += organizationListTupleIndexes.Count > 0 ? "Organizations: " : "";
+                    foreach (var tuple in organizationListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 14, (tuple.Item2 - 14) - tuple.Item1) + (tuple != organizationListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                     results += "========================================================= END ==============================================================";
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                 }

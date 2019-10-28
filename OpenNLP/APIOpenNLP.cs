@@ -9,6 +9,7 @@ namespace OpenNLP
         private static Tools.PosTagger.EnglishMaximumEntropyPosTagger mPosTagger;
         private static Tools.Chunker.EnglishTreebankChunker mChunker;
         private static Tools.SentimentAnalysis.AFINNLexicon mAFINNLexicon;
+        private static Tools.NameFind.EnglishNameFinder mNameFinder;
 
         public static string[] SplitSentences(string paragraph)
         {
@@ -88,6 +89,17 @@ namespace OpenNLP
                 File.AppendAllText("POSTagged.txt", chunkPostag);
                 File.AppendAllText("POSTagged.txt", "\n\n");
             }
+        }
+
+        public static string FindNames(string sentence)
+        {
+            if (mNameFinder == null)
+            {
+                mNameFinder = new Tools.NameFind.EnglishNameFinder("../../../SharpNLP Training Data/NameFind/");
+            }
+
+            var models = new[] { "date", "location", "money", "organization", "percentage", "person", "time" };
+            return mNameFinder.GetNames(models, sentence);
         }
     }
 }
