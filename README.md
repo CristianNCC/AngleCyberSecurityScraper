@@ -7,3 +7,4 @@ Known to work websites (for dynamic scraping):
 
 https://threatpost.com/
 https://thehackernews.com/
+https://www.sfgate.com/
