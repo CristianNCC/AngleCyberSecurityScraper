@@ -68,10 +68,7 @@ namespace NLPWebScraper
     {
         public const int maximalWordCount = 20;
         public const int maximalSubdigraphSize = 4;
-        public const float nodeDifferenceEpsilon = 0.1f;
-        public const float hyperLinkDensityThreshold = 0.333f;
-        public const float textDensityThreshold = 0.4f; 
-        public const float thresholdStandardDeviance = 5.0f;
+        public const float thresholdStandardDeviance = 15.0f;
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
         public async Task<List<DocumentScrapingResult>> DynamicScraping()
@@ -99,7 +96,7 @@ namespace NLPWebScraper
             // Sort remaining links by length.
             mainPageLinks = mainPageLinks.OrderByDescending(link => link.Length).ToHashSet();
 
-            HashSet<HashSet<string>> testedGraphs = new HashSet<HashSet<string>>();
+            HashSet<Tuple<double, HashSet<string>>> testedGraphs = new HashSet<Tuple<double, HashSet<string>>>();
             foreach (var link in mainPageLinks)
             {
                 // Get the DOM of the current subpage.
@@ -135,7 +132,7 @@ namespace NLPWebScraper
                         // Found a good subdigraph, we can return;
                         bestCS = iterationSubdigraph;
 
-                        if (testedGraphs.Any(cs => cs.SetEquals(bestCS)))
+                        if (testedGraphs.Any(cs => cs.Item2.SetEquals(bestCS)))
                             continue;
 
                         foreach (var page in bestCS)
@@ -183,7 +180,7 @@ namespace NLPWebScraper
                         }
                         else
                         {
-                            testedGraphs.Add(new HashSet<string>(bestCS));
+                            testedGraphs.Add(new Tuple<double, HashSet<string>>(averageStandardDeviation, new HashSet<string>(bestCS)));
                             templateFrequency.Clear();
                             bestCS.Clear();
                             webDocuments.Clear();
@@ -259,10 +256,13 @@ namespace NLPWebScraper
 
             // Filter away the elements that have no text content.
             var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
-                .Where(element => !string.IsNullOrEmpty(element.TextContent) && element is IHtmlDivElement)
+                .Where(element => !string.IsNullOrEmpty(element.TextContent) && 
+                (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlTableCellElement))
                 .ToList()).ToList();
 
-            // Since some HTML elements contain one another, we need to filter out the common content.
+           var docSort = firstIterationFilteredDocuments.First().OrderByDescending(test => test.TextContent.Length).ToList();
+
+            //Since some HTML elements contain one another, we need to filter out the common content.
             foreach (var documentElements in firstIterationFilteredDocuments)
             {
                 for (int iElementIdx = 0; iElementIdx < documentElements.Count; iElementIdx++)
@@ -301,6 +301,9 @@ namespace NLPWebScraper
 
                     documentFeatureAnalyis.Add(new Tuple<AngleSharp.Dom.IElement, float, float>(node, node.GetNodeTextDensity(), node.GetNodeHyperlinkDensity()));
                 }
+
+                float textDensityThreshold = documentFeatureAnalyis.Average(feature => feature.Item2);
+                float hyperLinkDensityThreshold = documentFeatureAnalyis.Average(feature => feature.Item3);
 
                 for (int iNodeIdx = 1; iNodeIdx < documentFeatureAnalyis.Count - 1; iNodeIdx++)
                 {
