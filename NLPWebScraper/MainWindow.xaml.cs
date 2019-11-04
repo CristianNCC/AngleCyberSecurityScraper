@@ -76,7 +76,7 @@ namespace NLPWebScraper
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                     results += "========================================================= END ==============================================================";
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                }
+                }   
             }
 
             TextBox textbox = new TextBox()

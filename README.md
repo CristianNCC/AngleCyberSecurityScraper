@@ -6,5 +6,9 @@ NLP capabilities to it. Said capabilities are not clearly defined as of right no
 Known to work websites (for dynamic scraping):
 
 https://threatpost.com/
+
 https://thehackernews.com/
+
 https://www.sfgate.com/
+
+https://www.theguardian.com/international

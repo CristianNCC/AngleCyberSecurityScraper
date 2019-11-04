@@ -138,6 +138,10 @@ namespace NLPWebScraper
                         foreach (var page in bestCS)
                         {
                             var webPageCS = await GetSubPageFromLink(page);
+
+                            if (webPage == null)
+                                continue;
+
                             webDocuments.Add(webPageCS);
                         }
 
