@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NLPWebScraper
 {
     class Utils
     {
-        // https://en.wikipedia.org/wiki/Levenshtein_distance
         public static int ComputeLevenshteinDistance(string a, string b)
         {
             if (String.IsNullOrEmpty(a) && String.IsNullOrEmpty(b))

@@ -11,7 +11,6 @@ using System.Windows.Input;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
-using System.IO;
 
 namespace NLPWebScraper
 {
@@ -23,8 +22,13 @@ namespace NLPWebScraper
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
 
         // List of dictionaries where Key=Term and list of tuples <url, articleTitle, titlePolarity>
-        public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = 
-            new List<Dictionary<string, List<Tuple<string, string, int>>>>();
+        public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = new List<Dictionary<string, List<Tuple<string, string, int>>>>();
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            LoadUpSupportedWebsites();
+        }
 
         private async void DynamicScraping()
         {
@@ -155,12 +159,6 @@ namespace NLPWebScraper
             spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
         }
 
-        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
-        {
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
-            e.Handled = true;
-        }
-
         public void FillResultsDictionary(int websiteIdx, IEnumerable<IElement> articleLinksList, Func<IElement, Tuple<string, string>> CleanUpResults)
         {
             foreach (var result in articleLinksList)
@@ -187,12 +185,6 @@ namespace NLPWebScraper
                     }
                 }
             }
-        }
-
-        public MainWindow()
-        {
-            InitializeComponent();
-            LoadUpSupportedWebsites();
         }
 
         private void LoadUpSupportedWebsites()
@@ -229,6 +221,12 @@ namespace NLPWebScraper
         {
             staticScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == false;
             dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            e.Handled = true;
         }
     }
 }

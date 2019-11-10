@@ -81,10 +81,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Utils\Extensions.cs" />
-    <Compile Include="Scraped Websites\Base\DynamicallyScrapedWebsite.cs" />
-    <Compile Include="Scraped Websites\Base\ScrapedWebsite.cs" />
-    <Compile Include="Scraped Websites\Base\StaticallyScrapedWebsite.cs" />
-    <Compile Include="Scraped Websites\HackerNews.cs" />
+    <Compile Include="Scraping\Dynamic Scraping\DynamicallyScrapedWebsite.cs" />
+    <Compile Include="Scraping\Base\ScrapedWebsite.cs" />
+    <Compile Include="Scraping\Static scraping\StaticallyScrapedWebsite.cs" />
+    <Compile Include="Scraping\Static scraping\HackerNews.cs" />
     <Compile Include="Utils\Utils.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -132,5 +132,6 @@
       <Name>OpenNLP</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

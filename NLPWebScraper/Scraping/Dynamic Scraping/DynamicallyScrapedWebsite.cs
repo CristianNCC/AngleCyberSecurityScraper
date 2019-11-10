@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace NLPWebScraper
 {
+    using BestCSData = Tuple<HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>;
+
     public class Connection<T>
     {
         public Connection(T end1, T end2)
@@ -74,21 +76,16 @@ namespace NLPWebScraper
         public async Task<List<DocumentScrapingResult>> DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl);
+
+            // Get outgoing links from the main page.
             var mainPageLinks = mainPageDocument.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != siteUrl)
                     .Select(webPageFilteredLink => (webPageFilteredLink as IHtmlAnchorElement)?.Href).ToHashSet();
 
             // Removed undefined links.
             mainPageLinks = mainPageLinks.Where(eLink => eLink != "javascript:void(0)").ToHashSet();
 
+            // Mark the links that have already been processed to avoid infinite loops.
             HashSet<string> processedLinks = new HashSet<string>();
-            HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
-            HashSet<string> bestCS = new HashSet<string>();
-
-            // Get the median for each group of tags and use it as a template.
-            Dictionary<string, int> templateFrequency = new Dictionary<string, int>();
-
-            // Get the DOM for the pages in the graph.
-            List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
 
             // Eliminate links that are shorter than the starting URL.
             mainPageLinks = mainPageLinks.Where(link => link.Length > siteUrl.Length).ToHashSet();
@@ -96,7 +93,95 @@ namespace NLPWebScraper
             // Sort remaining links by length.
             mainPageLinks = mainPageLinks.OrderByDescending(link => link.Length).ToHashSet();
 
+            // Get BestCSData, which is a tuple of the bestCS in links, the DOM for each page and the template frequency for the CS.
+            var bestCSData = await GetBestCompleteSubdigraph(mainPageLinks, processedLinks);
+
+            // Tags that don't appear are not really interesting.
+            var templateFrequency = bestCSData.Item3.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
+
+            // Node filtering from "Main content extraction from web pages based on node."
+            var filteredDocumentNodes = NodeFiltering(bestCSData.Item1, bestCSData.Item2);
+
+            // Remove all common strings from every document. Usually, this will be the text on different buttons.
+            FilterAllCommonStrings(filteredDocumentNodes);
+
+            // Apply NLP techniques for filtering.
+            ApplyNLPFiltering(filteredDocumentNodes);
+
+            return filteredDocumentNodes;
+        }
+
+        public async Task<IHtmlDocument> GetSubPageFromLink(string url)
+        {
+            IHtmlDocument webPage = null;
+            try
+            {
+                webPage = await GetDocumentFromLink(url);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    webPage = await GetDocumentFromLink(siteUrl + url);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+
+            return webPage;
+        }
+
+        public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections)
+        {
+            List<HashSet<string>> allCompleteSubdigraphs = new List<HashSet<string>>();
+            foreach (var pLink in processedLinks)
+            {
+                HashSet<string> newCS = new HashSet<string>();
+                foreach (var connectionOne in connections)
+                {
+                    if (connectionOne.end1 == pLink)
+                    {
+                        foreach (var connectionTwo in connections)
+                        {
+                            if (connectionTwo.end2 == pLink && connectionTwo.end1 == connectionOne.end2)
+                            {
+                                newCS.Add(connectionTwo.end1);
+                                newCS.Add(connectionTwo.end2);
+                            }
+                        }
+                    }
+                    else if (connectionOne.end2 == pLink)
+                    {
+                        foreach (var connectionTwo in connections)
+                        {
+                            if (connectionTwo.end1 == pLink && connectionTwo.end2 == connectionOne.end1)
+                            {
+                                newCS.Add(connectionTwo.end1);
+                                newCS.Add(connectionTwo.end2);
+                            }
+                        }
+                    }
+                }
+
+                if (!allCompleteSubdigraphs.Any(cs => cs.SetEquals(newCS)) && newCS.Count >= maximalSubdigraphSize)
+                    allCompleteSubdigraphs.Add(newCS);
+            }
+
+            return allCompleteSubdigraphs;
+        }
+
+        public async Task<BestCSData> GetBestCompleteSubdigraph(HashSet<string> mainPageLinks, HashSet<string> processedLinks)
+        {
+            HashSet<string> bestCS = new HashSet<string>();
+            List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
+            HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
             HashSet<Tuple<double, HashSet<string>>> testedGraphs = new HashSet<Tuple<double, HashSet<string>>>();
+
+            // Get the median for each group of tags and use it as a template.
+            Dictionary<string, int> templateFrequency = new Dictionary<string, int>();
+
             foreach (var link in mainPageLinks)
             {
                 // Get the DOM of the current subpage.
@@ -122,8 +207,7 @@ namespace NLPWebScraper
                 existingLinks.ForEach(webPageLink => connections.Add(new Connection<string>(link, webPageLink)));
 
                 // Get all complete subdigraphs.
-                List<HashSet<string>> allCompleteSubdigraphs = GetAllCompleteSubdigraphs(processedLinks, connections, link);
-
+                List<HashSet<string>> allCompleteSubdigraphs = GetAllCompleteSubdigraphs(processedLinks, connections);
                 bool foundSubdigraph = false;
                 foreach (var iterationSubdigraph in allCompleteSubdigraphs)
                 {
@@ -135,6 +219,7 @@ namespace NLPWebScraper
                         if (testedGraphs.Any(cs => cs.Item2.SetEquals(bestCS)))
                             continue;
 
+                        // Get the DOM for the pages in the graph.
                         foreach (var page in bestCS)
                         {
                             var webPageCS = await GetSubPageFromLink(page);
@@ -201,57 +286,7 @@ namespace NLPWebScraper
                     break;
             }
 
-            // Tags that don't appear are not really interesting.
-            templateFrequency = templateFrequency.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
-
-            // Node filtering from "Main content extraction from web pages based on node."
-            List<DocumentScrapingResult> filteredDocumentNodes = NodeFiltering(bestCS, webDocuments);
-
-            // Remove all common strings from every document. Usually, this will be the text on different buttons.
-            FilterAllCommonStrings(filteredDocumentNodes);
-
-            // Aggregate all text content.
-            foreach (var documentResult in filteredDocumentNodes)
-            {
-                documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
-
-                var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
-
-                List<string> filteredSentences = new List<string>();
-                List<List<string>> sentencesWords = new List<List<string>>();
-                foreach (var sentence in sentences)
-                {
-                    var filteredSentence = sentence.Replace("\n", "");
-                    filteredSentences.Add(filteredSentence);
-
-                    sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
-                }
-
-                List<List<string>> posSentences = new List<List<string>>();
-                foreach (var sentenceWordList in sentencesWords)
-                    posSentences.Add(OpenNLP.APIOpenNLP.PosTagTokens(sentenceWordList.ToArray()).ToList());
-
-                List<int> indexesToRemove = new List<int>();
-                for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
-                {
-                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")) || sentencesWords[sentenceIndex].Any(word => word.Length > maximalWordCount))
-                        indexesToRemove.Add(sentenceIndex);
-                }
-
-                documentResult.content = string.Empty;
-                for (int index = 0; index < sentencesWords.Count; index++)
-                {
-                    if (indexesToRemove.Contains(index))
-                        continue;
-
-                    documentResult.sentencesWords.Add(sentencesWords[index]);
-                    documentResult.posSentences.Add(posSentences[index]);
-
-                    documentResult.content += filteredSentences[index]; //+ Environment.NewLine;
-                }
-            }
-
-            return filteredDocumentNodes;
+            return new Tuple<HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>(bestCS, webDocuments, templateFrequency);
         }
 
         public List<DocumentScrapingResult> NodeFiltering(HashSet<string> bestCS, List<IHtmlDocument> webDocuments)
@@ -366,65 +401,48 @@ namespace NLPWebScraper
             }
         }
 
-        public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections, string currrentLink)
+        public void ApplyNLPFiltering(List<DocumentScrapingResult> filteredDocumentNodes)
         {
-            List<HashSet<string>> allCompleteSubdigraphs = new List<HashSet<string>>();
-            foreach (var pLink in processedLinks)
+            // Aggregate all text content.
+            foreach (var documentResult in filteredDocumentNodes)
             {
-                HashSet<string> newCS = new HashSet<string>();
-                foreach (var connectionOne in connections)
+                documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
+
+                var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
+
+                List<string> filteredSentences = new List<string>();
+                List<List<string>> sentencesWords = new List<List<string>>();
+                foreach (var sentence in sentences)
                 {
-                    if (connectionOne.end1 == pLink)
-                    {
-                        foreach (var connectionTwo in connections)
-                        {
-                            if (connectionTwo.end2 == pLink && connectionTwo.end1 == connectionOne.end2)
-                            {
-                                newCS.Add(connectionTwo.end1);
-                                newCS.Add(connectionTwo.end2);
-                            }
-                        }
-                    }
-                    else if (connectionOne.end2 == pLink)
-                    {
-                        foreach (var connectionTwo in connections)
-                        {
-                            if (connectionTwo.end1 == pLink && connectionTwo.end2 == connectionOne.end1)
-                            {
-                                newCS.Add(connectionTwo.end1);
-                                newCS.Add(connectionTwo.end2);
-                            }
-                        }
-                    }
+                    var filteredSentence = sentence.Replace("\n", "");
+                    filteredSentences.Add(filteredSentence);
+
+                    sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
                 }
 
-                if (!allCompleteSubdigraphs.Any(cs => cs.SetEquals(newCS)) && newCS.Count >= maximalSubdigraphSize)
-                    allCompleteSubdigraphs.Add(newCS);
-            }
+                List<List<string>> posSentences = new List<List<string>>();
+                foreach (var sentenceWordList in sentencesWords)
+                    posSentences.Add(OpenNLP.APIOpenNLP.PosTagTokens(sentenceWordList.ToArray()).ToList());
 
-            return allCompleteSubdigraphs;
-        }
-
-        public async Task<IHtmlDocument> GetSubPageFromLink(string url)
-        {
-            IHtmlDocument webPage = null;
-            try
-            {
-                webPage = await GetDocumentFromLink(url);
-            }
-            catch (Exception)
-            {
-                try
+                List<int> indexesToRemove = new List<int>();
+                for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
                 {
-                    webPage = await GetDocumentFromLink(siteUrl + url);
+                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")) || sentencesWords[sentenceIndex].Any(word => word.Length > maximalWordCount))
+                        indexesToRemove.Add(sentenceIndex);
                 }
-                catch (Exception)
+
+                documentResult.content = string.Empty;
+                for (int index = 0; index < sentencesWords.Count; index++)
                 {
-                    return null;
+                    if (indexesToRemove.Contains(index))
+                        continue;
+
+                    documentResult.sentencesWords.Add(sentencesWords[index]);
+                    documentResult.posSentences.Add(posSentences[index]);
+
+                    documentResult.content += filteredSentences[index]; //+ Environment.NewLine;
                 }
             }
-
-            return webPage;
         }
     }
 }
