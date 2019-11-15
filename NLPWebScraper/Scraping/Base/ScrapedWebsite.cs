@@ -28,16 +28,16 @@ namespace NLPWebScraper
             this.siteUrl = siteUrl;
         }
 
-        public async Task<IHtmlDocument> GetDocumentFromLink(string url)
+        public static async Task<IHtmlDocument> GetDocumentFromLink(string url)
         {
             CancellationTokenSource cancellationToken = new CancellationTokenSource();
             HttpClient httpClient = new HttpClient();
             HtmlParser parser = new HtmlParser();
 
-            HttpResponseMessage request = await httpClient.GetAsync(url);
+            HttpResponseMessage request = await httpClient.GetAsync(url).ConfigureAwait(true);
             cancellationToken.Token.ThrowIfCancellationRequested();
 
-            Stream response = await request.Content.ReadAsStreamAsync();
+            Stream response = await request.Content.ReadAsStreamAsync().ConfigureAwait(true);
             cancellationToken.Token.ThrowIfCancellationRequested();
 
             IHtmlDocument document = parser.ParseDocument(response);

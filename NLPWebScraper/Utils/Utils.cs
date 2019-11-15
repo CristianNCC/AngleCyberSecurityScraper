@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NLPWebScraper
 {
@@ -47,7 +48,9 @@ namespace NLPWebScraper
             List<int> indexes = new List<int>();
             for (int index = 0; ; index += value.Length)
             {
+#pragma warning disable CA1307 // Specify StringComparison
                 index = content.IndexOf(value, index);
+#pragma warning restore CA1307 // Specify StringComparison
                 if (index == -1)
                     return indexes;
 
@@ -82,7 +85,7 @@ namespace NLPWebScraper
             return tupleList;
         }
 
-        public static List<string> GetNamedEntities(string content, string namedEntity, List<Tuple<int, int>> indexes)
+        public static List<string> GetNamedEntities(string content, List<Tuple<int, int>> indexes)
         {
             List<string> namedEntities = new List<string>();
 

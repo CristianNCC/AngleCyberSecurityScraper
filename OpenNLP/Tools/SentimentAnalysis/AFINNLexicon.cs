@@ -70,10 +70,14 @@ namespace OpenNLP.Tools.SentimentAnalysis
             int sentencePolarity = 0;
             foreach (var word in sentence)
             {
+#pragma warning disable CA1304 // Specify CultureInfo
                 string wordToLower = word.ToLower();
+#pragma warning restore CA1304 // Specify CultureInfo
                 foreach (var wordToPolarity in mWordToPolarityLexicon)
                 {
+#pragma warning disable CA1304 // Specify CultureInfo
                     if (wordToLower == wordToPolarity.Key.ToLower())
+#pragma warning restore CA1304 // Specify CultureInfo
                         sentencePolarity += wordToPolarity.Value;
                 }
             }

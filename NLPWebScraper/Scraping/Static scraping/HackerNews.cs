@@ -24,7 +24,7 @@ namespace NLPWebScraper
             {;
 
                 Task<IHtmlDocument> documentTask = GetDocumentFromLink(currentSiteUrl);
-                IHtmlDocument document = await documentTask;
+                IHtmlDocument document = await documentTask.ConfigureAwait(true);
                 webDocuments.Add(document);
 
                 currentSiteUrl = document.All.Where(x => x.ClassName == "blog-pager-older-link-mobile")

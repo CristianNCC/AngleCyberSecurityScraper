@@ -39,7 +39,7 @@ namespace NLPWebScraper
                 if (scrapedWebsite == null)
                     continue;
 
-                var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping();
+                var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping().ConfigureAwait(true);
                 foreach (var documentResult in dynamicScrapingResultList)
                 {
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
@@ -104,7 +104,7 @@ namespace NLPWebScraper
                     continue;
 
                 Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsite.ScrapeWebsite(numberOfPages);
-                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask;      
+                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask.ConfigureAwait(true);      
 
                 foreach (var document in webDocuments)
                 {
@@ -137,7 +137,9 @@ namespace NLPWebScraper
                     {
                         TextBlock title = new TextBlock()
                         {
+#pragma warning disable CA1305 // Specify IFormatProvider
                             Text = " Polarity: (" + sortedResults[iTermResult].Item3.ToString() + "): " + sortedResults[iTermResult].Item1
+#pragma warning restore CA1305 // Specify IFormatProvider
                         };
 
                         (termGroupBox.Content as StackPanel).Children.Add(title);
@@ -161,6 +163,9 @@ namespace NLPWebScraper
 
         public void FillResultsDictionary(int websiteIdx, IEnumerable<IElement> articleLinksList, Func<IElement, Tuple<string, string>> CleanUpResults)
         {
+            if (articleLinksList == null)
+                return;
+
             foreach (var result in articleLinksList)
             {
                 Tuple<string, string> urlTitleTuple = CleanUpResults(result);
@@ -171,9 +176,13 @@ namespace NLPWebScraper
                 {
                     if (!string.IsNullOrWhiteSpace(articleTitle) && !string.IsNullOrWhiteSpace(url))
                     {
+#pragma warning disable CA1304 // Specify CultureInfo
                         List<string> tokenizedTitle = OpenNLP.APIOpenNLP.TokenizeSentence(articleTitle).Select(token => token.ToLower()).ToList();
+#pragma warning restore CA1304 // Specify CultureInfo
 
+#pragma warning disable CA1304 // Specify CultureInfo
                         if (!tokenizedTitle.Contains(term.ToLower()))
+#pragma warning restore CA1304 // Specify CultureInfo
                             continue;
 
                         int sentencePolarity = sentencePolarity = OpenNLP.APIOpenNLP.AFINNAnalysis(tokenizedTitle.ToArray());
@@ -198,7 +207,10 @@ namespace NLPWebScraper
             resultsStackPanel.Children.Clear();
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
 
-            int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
+            bool castSucceded = int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
+            if (!castSucceded)
+                return;
+
             queryTerms = queryTermsTextBox.Text.Split(';').ToList();
 
             if (dynamicScrapingCheckbox.IsChecked == true)

@@ -8,12 +8,15 @@ namespace NLPWebScraper
     {
         public static double GetStandardDeviation(this List<int> values)
         {
+            if (values == null)
+                return 0.0f;
+
             double ret = 0;
-            if (values.Count() > 0)
+            if (values.Count > 0)
             {  
                 double avg = values.Average();     
                 double sum = values.Sum(d => Math.Pow(d - avg, 2));    
-                ret = Math.Sqrt((sum) / (values.Count() - 1));
+                ret = Math.Sqrt((sum) / (values.Count - 1));
             }
             return ret;
         }
@@ -34,16 +37,25 @@ namespace NLPWebScraper
 
         public static float GetNodeTextDensity(this AngleSharp.Dom.IElement element)
         {
+            if (element == null)
+                return 0.0f;
+
             return ((float)element.TextContent.Length) / ((float)element.InnerHtml.Length);
         }
 
         public static float GetNodeHyperlinkDensity(this AngleSharp.Dom.IElement element)
         {
+            if (element == null)
+                return 0.0f;
+
             return ((float)element.BaseUri.Length) / ((float)element.InnerHtml.Length);
         }
 
         public static bool IsSimilarWith(this Tuple<AngleSharp.Dom.IElement, float, float> element, Tuple<AngleSharp.Dom.IElement, float, float> toCompare, float epsilon)
         {
+            if (element == null || toCompare == null)
+                return false;
+
             return Math.Abs((element.Item2 - toCompare.Item2) * 0.2) + Math.Abs((element.Item3 - toCompare.Item3) * 0.8) < epsilon;
         }
     }

@@ -75,7 +75,7 @@ namespace NLPWebScraper
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
         public async Task<List<DocumentScrapingResult>> DynamicScraping()
         {  
-            var mainPageDocument = await GetDocumentFromLink(siteUrl);
+            var mainPageDocument = await GetDocumentFromLink(siteUrl).ConfigureAwait(true);
 
             // Get outgoing links from the main page.
             var mainPageLinks = mainPageDocument.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != siteUrl)
@@ -94,7 +94,7 @@ namespace NLPWebScraper
             mainPageLinks = mainPageLinks.OrderByDescending(link => link.Length).ToHashSet();
 
             // Get BestCSData, which is a tuple of the bestCS in links, the DOM for each page and the template frequency for the CS.
-            var bestCSData = await GetBestCompleteSubdigraph(mainPageLinks, processedLinks);
+            var bestCSData = await GetBestCompleteSubdigraph(mainPageLinks, processedLinks).ConfigureAwait(true);
 
             // Tags that don't appear are not really interesting.
             var templateFrequency = bestCSData.Item3.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
@@ -116,13 +116,13 @@ namespace NLPWebScraper
             IHtmlDocument webPage = null;
             try
             {
-                webPage = await GetDocumentFromLink(url);
+                webPage = await GetDocumentFromLink(url).ConfigureAwait(true);
             }
             catch (Exception)
             {
                 try
                 {
-                    webPage = await GetDocumentFromLink(siteUrl + url);
+                    webPage = await GetDocumentFromLink(siteUrl + url).ConfigureAwait(true);
                 }
                 catch (Exception)
                 {
@@ -133,7 +133,7 @@ namespace NLPWebScraper
             return webPage;
         }
 
-        public List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections)
+        public static List<HashSet<string>> GetAllCompleteSubdigraphs(IEnumerable<string> processedLinks, HashSet<Connection<string>> connections)
         {
             List<HashSet<string>> allCompleteSubdigraphs = new List<HashSet<string>>();
             foreach (var pLink in processedLinks)
@@ -185,7 +185,7 @@ namespace NLPWebScraper
             foreach (var link in mainPageLinks)
             {
                 // Get the DOM of the current subpage.
-                var webPage = await GetSubPageFromLink(link);
+                var webPage = await GetSubPageFromLink(link).ConfigureAwait(true);
                 if (webPage == null)
                     continue;
 
@@ -222,7 +222,7 @@ namespace NLPWebScraper
                         // Get the DOM for the pages in the graph.
                         foreach (var page in bestCS)
                         {
-                            var webPageCS = await GetSubPageFromLink(page);
+                            var webPageCS = await GetSubPageFromLink(page).ConfigureAwait(true);
 
                             if (webPage == null)
                                 continue;
@@ -289,7 +289,7 @@ namespace NLPWebScraper
             return new Tuple<HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>(bestCS, webDocuments, templateFrequency);
         }
 
-        public List<DocumentScrapingResult> NodeFiltering(HashSet<string> bestCS, List<IHtmlDocument> webDocuments)
+        public static List<DocumentScrapingResult> NodeFiltering(HashSet<string> bestCS, List<IHtmlDocument> webDocuments)
         {
             List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
 
@@ -388,7 +388,7 @@ namespace NLPWebScraper
             return filteredDocumentNodes;
         }
 
-        public void FilterAllCommonStrings(List<DocumentScrapingResult> filteredDocumentNodes)
+        public static void FilterAllCommonStrings(List<DocumentScrapingResult> filteredDocumentNodes)
         {
             List<string> commonStrings = filteredDocumentNodes.FirstOrDefault()?.scrapingResults.Select(node => node.element.TextContent).ToList();
             for (int iDocumentIdx = 1; iDocumentIdx < filteredDocumentNodes.Count; iDocumentIdx++)
@@ -401,7 +401,7 @@ namespace NLPWebScraper
             }
         }
 
-        public void ApplyNLPFiltering(List<DocumentScrapingResult> filteredDocumentNodes)
+        public static void ApplyNLPFiltering(List<DocumentScrapingResult> filteredDocumentNodes)
         {
             // Aggregate all text content.
             foreach (var documentResult in filteredDocumentNodes)

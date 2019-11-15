@@ -1,0 +1,22 @@
+﻿[*.cs]
+
+# CA1814: Prefer jagged arrays over multidimensional
+dotnet_diagnostic.CA1814.severity = silent
+
+# CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1051.severity = silent
+
+# CA1054: Uri parameters should not be strings
+dotnet_diagnostic.CA1054.severity = silent
+
+# IDE0001: Simplify Names
+dotnet_diagnostic.IDE0001.severity = silent
+
+# CA1303: Do not pass literals as localized parameters
+dotnet_diagnostic.CA1303.severity = silent
+
+# CA1031: Do not catch general exception types
+dotnet_diagnostic.CA1031.severity = silent
+
+# CA2234: Pass system uri objects instead of strings
+dotnet_diagnostic.CA2234.severity = silent
