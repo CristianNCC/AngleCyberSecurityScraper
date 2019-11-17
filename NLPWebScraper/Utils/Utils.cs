@@ -94,5 +94,87 @@ namespace NLPWebScraper
 
             return namedEntities;
         }
+
+        public static List<Dictionary<string, double>> Transform(List<List<List<string>>> stemmedDocuments, int vocabularyThreshold = 3)
+        {
+            Dictionary<string, double> vocabularyIDF = new Dictionary<string, double>();
+
+            // Get the vocabulary and stem the documents at the same time.
+            List<string> vocabulary = GetVocabulary(stemmedDocuments, vocabularyThreshold);
+
+            // Remove all punctuation vocabulary entries.
+            vocabulary = vocabulary.Where(word => word.All(letter => char.IsLetterOrDigit(letter))).ToList();
+
+            // Calculate the IDF for each vocabulary term.
+            foreach (var term in vocabulary)
+            {
+                double numberOfDocsContainingTerm = stemmedDocuments.Where(document => document.Where(sentence => sentence.Any(word => word.ToLower() == term)).Any()).Count();
+                vocabularyIDF[term] = Math.Log((double)stemmedDocuments.Count / numberOfDocsContainingTerm != 0 ? ((double)1 + numberOfDocsContainingTerm) : 1);
+            }
+
+            // Transform each document into a vector of tfidf values.
+            return TransformToTFIDFVectors(stemmedDocuments, vocabularyIDF);
+        }
+
+        private static List<Dictionary<string, double>> TransformToTFIDFVectors(List<List<List<string>>> stemmedDocs, Dictionary<string, double> vocabularyIDF)
+        {
+            // Transform each document into a vector of tfidf values.
+            List<Dictionary<string, double>> returnList = new List<Dictionary<string, double>>();
+
+            int documentIdx = 0;
+            foreach (var doc in stemmedDocs)
+            {
+                returnList.Add(new Dictionary<string, double>());
+                foreach (var vocab in vocabularyIDF)
+                {
+                    // Term frequency = count how many times the term appears in this document.
+                    double tf = 0.0f;
+                    doc.ForEach(sentence => tf += sentence.Where(word => word.ToLower() == vocab.Key).Count());
+                    double tfidf = tf * vocab.Value;
+
+                    returnList[documentIdx][vocab.Key] = tfidf;
+                }
+                documentIdx++;
+            }
+
+            return returnList;
+        }
+
+        private static List<string> GetVocabulary(List<List<List<string>>> stemmedDocs, int vocabularyThreshold)
+        {
+            List<string> vocabulary = new List<string>();
+            Dictionary<string, int> wordCountList = new Dictionary<string, int>();
+
+            foreach (var document in stemmedDocs)
+            {
+                foreach (var sentence in document)
+                {
+                    foreach (var word in sentence)
+                    {
+                        string lowerCaseWord = word.ToLower();
+
+                        if (StopWords.stopWordsList.Contains(lowerCaseWord))
+                            continue;
+
+                        if (wordCountList.ContainsKey(lowerCaseWord))
+                        {
+                            wordCountList[lowerCaseWord]++;
+                        }
+                        else
+                        {
+                            wordCountList.Add(lowerCaseWord, 0);
+                        }
+                    }
+                }
+            }
+
+            var vocabList = wordCountList.Where(w => w.Value >= vocabularyThreshold);
+            foreach (var item in vocabList)
+            {
+                vocabulary.Add(item.Key);
+            }
+
+            return vocabulary;
+        }
     }
 }

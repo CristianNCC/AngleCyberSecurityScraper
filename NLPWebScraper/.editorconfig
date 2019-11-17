@@ -20,3 +20,6 @@ dotnet_diagnostic.CA1031.severity = silent
 
 # CA2234: Pass system uri objects instead of strings
 dotnet_diagnostic.CA2234.severity = silent
+
+# CA1304: Specify CultureInfo
+dotnet_diagnostic.CA1304.severity = silent

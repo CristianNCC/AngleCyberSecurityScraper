@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace NLPWebScraper
 {
-    using BestCSData = Tuple<HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>;
-
     public class Connection<T>
     {
         public Connection(T end1, T end2)
@@ -68,12 +66,17 @@ namespace NLPWebScraper
 
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
-        public const int maximalWordCount = 20;
-        public const int maximalSubdigraphSize = 4;
-        public const float thresholdStandardDeviance = 15.0f;
+        public HashSet<string> bestCS = new HashSet<string>();
+        List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
+        public Dictionary<string, int> websiteTemplate = new Dictionary<string, int>();
+        public List<DocumentScrapingResult> scrapingResults = new List<DocumentScrapingResult>();
+
+        private const int maximalWordCount = 20;
+        private const int maximalSubdigraphSize = 4;
+        private const float thresholdStandardDeviance = 15.0f;
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
-        public async Task<List<DocumentScrapingResult>> DynamicScraping()
+        public async Task DynamicScraping()
         {  
             var mainPageDocument = await GetDocumentFromLink(siteUrl).ConfigureAwait(true);
 
@@ -94,26 +97,24 @@ namespace NLPWebScraper
             mainPageLinks = mainPageLinks.OrderByDescending(link => link.Length).ToHashSet();
 
             // Get BestCSData, which is a tuple of the bestCS in links, the DOM for each page and the template frequency for the CS.
-            var bestCSData = await GetBestCompleteSubdigraph(mainPageLinks, processedLinks).ConfigureAwait(true);
+            await Task.Run(() => GetBestCompleteSubdigraph(mainPageLinks, processedLinks)).ConfigureAwait(true);
 
             // Tags that don't appear are not really interesting.
-            var templateFrequency = bestCSData.Item3.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
+            var templateFrequency = websiteTemplate.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
 
             // Node filtering from "Main content extraction from web pages based on node."
-            var filteredDocumentNodes = NodeFiltering(bestCSData.Item1, bestCSData.Item2);
+            scrapingResults = NodeFiltering();
 
             // Remove all common strings from every document. Usually, this will be the text on different buttons.
-            FilterAllCommonStrings(filteredDocumentNodes);
+            FilterAllCommonStrings(scrapingResults);
 
             // Apply NLP techniques for filtering.
-            ApplyNLPFiltering(filteredDocumentNodes);
-
-            return filteredDocumentNodes;
+            ApplyNLPFiltering(scrapingResults);
         }
 
         public async Task<IHtmlDocument> GetSubPageFromLink(string url)
         {
-            IHtmlDocument webPage = null;
+            IHtmlDocument webPage;
             try
             {
                 webPage = await GetDocumentFromLink(url).ConfigureAwait(true);
@@ -172,15 +173,10 @@ namespace NLPWebScraper
             return allCompleteSubdigraphs;
         }
 
-        public async Task<BestCSData> GetBestCompleteSubdigraph(HashSet<string> mainPageLinks, HashSet<string> processedLinks)
+        public async Task GetBestCompleteSubdigraph(HashSet<string> mainPageLinks, HashSet<string> processedLinks)
         {
-            HashSet<string> bestCS = new HashSet<string>();
-            List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
             HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
             HashSet<Tuple<double, HashSet<string>>> testedGraphs = new HashSet<Tuple<double, HashSet<string>>>();
-
-            // Get the median for each group of tags and use it as a template.
-            Dictionary<string, int> templateFrequency = new Dictionary<string, int>();
 
             foreach (var link in mainPageLinks)
             {
@@ -257,7 +253,7 @@ namespace NLPWebScraper
                             foreach (var pageDictionary in pagesFrequencyDictionaryList)
                                 tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
 
-                            templateFrequency[tagsArray[iTagIdx]] = tagValues.GetMedian();
+                            websiteTemplate[tagsArray[iTagIdx]] = tagValues.GetMedian();
                             templateStandardDeviation[tagsArray[iTagIdx]] = tagValues.GetStandardDeviation();
                         }
 
@@ -270,7 +266,7 @@ namespace NLPWebScraper
                         else
                         {
                             testedGraphs.Add(new Tuple<double, HashSet<string>>(averageStandardDeviation, new HashSet<string>(bestCS)));
-                            templateFrequency.Clear();
+                            websiteTemplate.Clear();
                             bestCS.Clear();
                             webDocuments.Clear();
                         }
@@ -285,11 +281,9 @@ namespace NLPWebScraper
                 if (foundSubdigraph)
                     break;
             }
-
-            return new Tuple<HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>(bestCS, webDocuments, templateFrequency);
         }
 
-        public static List<DocumentScrapingResult> NodeFiltering(HashSet<string> bestCS, List<IHtmlDocument> webDocuments)
+        public List<DocumentScrapingResult> NodeFiltering()
         {
             List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
 

@@ -16,7 +16,7 @@ namespace NLPWebScraper
 {
     public partial class MainWindow : Window
     {
-        public bool analyzeNamedEntities = false;
+        public bool analyzeNamedEntities = true;
         public int numberOfPages;
         public List<string> queryTerms;
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
@@ -39,14 +39,18 @@ namespace NLPWebScraper
                 if (scrapedWebsite == null)
                     continue;
 
-                var dynamicScrapingResultList = await scrapedWebsite.DynamicScraping().ConfigureAwait(true);
-                foreach (var documentResult in dynamicScrapingResultList)
+                await Task.Run(() => scrapedWebsite.DynamicScraping()).ConfigureAwait(true);
+
+                var documentsTFIDF = Utils.Transform((scrapedWebsites[1] as DynamicallyScrapedWebsite).scrapingResults.Select(result => result.sentencesWords).ToList());
+
+                int iDocumentIdx = 0;
+                foreach (var documentResult in scrapedWebsite.scrapingResults)
                 {
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                     results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
-                    results += documentResult.content;
+                    results += documentResult.content + Environment.NewLine;
 
                     if (analyzeNamedEntities)
                     {
@@ -75,12 +79,35 @@ namespace NLPWebScraper
                         results += organizationListTupleIndexes.Count > 0 ? "Organizations: " : "";
                         foreach (var tuple in organizationListTupleIndexes)
                             results += namedEntities.Substring(tuple.Item1 + 14, (tuple.Item2 - 14) - tuple.Item1) + (tuple != organizationListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                        results += "============== END Named Entities ==============";
+                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    }
+
+                    results += Environment.NewLine;
+
+                    var documentVocabulary = documentsTFIDF[iDocumentIdx].ToList();
+                    documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
+                    documentVocabulary.Reverse();
+                    var topFiveWords = documentVocabulary.Take(5).ToList();
+                    results += "Most important words in document: ";
+                    for (int iWordIdx = 0; iWordIdx < 5; iWordIdx++)
+                    {
+                        results += topFiveWords[iWordIdx].Key + "(" + topFiveWords[iWordIdx].Value + ")";
+
+                        if (iWordIdx != 4)
+                            results += ", ";
+                        else
+                            results += ".";
                     }
 
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                     results += "========================================================= END ==============================================================";
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                }   
+
+                    iDocumentIdx++;
+                }
             }
 
             TextBox textbox = new TextBox()
