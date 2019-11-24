@@ -43,7 +43,8 @@ namespace NLPWebScraper
 
                 await Task.Run(() => scrapedWebsite.DynamicScrapingForTemplateExtraction()).ConfigureAwait(true);
 
-                var documentsTFIDF = Utils.Transform((scrapedWebsites[1] as DynamicallyScrapedWebsite).scrapingResults.Select(result => result.sentencesWords).ToList());
+                // In progress: Information gathering.
+                await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
 
                 int iDocumentIdx = 0;
                 foreach (var documentResult in scrapedWebsite.scrapingResults)
@@ -89,14 +90,10 @@ namespace NLPWebScraper
 
                     results += Environment.NewLine;
 
-                    var documentVocabulary = documentsTFIDF[iDocumentIdx].ToList();
-                    documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
-                    documentVocabulary.Reverse();
-                    var topFiveWords = documentVocabulary.Take(5).ToList();
                     results += "Most important words in document: ";
                     for (int iWordIdx = 0; iWordIdx < 5; iWordIdx++)
                     {
-                        results += topFiveWords[iWordIdx].Key + "(" + topFiveWords[iWordIdx].Value + ")";
+                        results += documentResult.topFiveRelevantWords[iWordIdx] + " ";
 
                         if (iWordIdx != 4)
                             results += ", ";
@@ -110,9 +107,6 @@ namespace NLPWebScraper
 
                     iDocumentIdx++;
                 }
-
-                // In progress: Information gathering.
-                await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
             }
 
             TextBox textbox = new TextBox()

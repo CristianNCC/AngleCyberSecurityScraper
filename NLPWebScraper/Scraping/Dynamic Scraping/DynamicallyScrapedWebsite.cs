@@ -29,6 +29,9 @@ namespace NLPWebScraper
         public List<List<string>> sentencesWords = null;
         public List<List<string>> posSentences = null;
 
+        public bool isValid = false;
+        public List<string> topFiveRelevantWords = new List<string>();
+
         public DocumentScrapingResult(string linkToPage, List<ScrapingResult> scrapingResults, string content, List<List<string>> sentencesWords, List<List<string>> posSentences)
         {
             this.linkToPage = linkToPage;
@@ -78,7 +81,8 @@ namespace NLPWebScraper
 
         private const int maximalWordCount = 20;
         private const int maximalSubdigraphSize = 4;
-        private const float thresholdStandardDeviance = 15.0f;
+        private const float thresholdStandardDevianceTemplate = 15.0f;
+        private const float thresholdStandardDevianceGathering = 1.0f;
 
         public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
         #endregion
@@ -96,7 +100,7 @@ namespace NLPWebScraper
             RefreshLinksHashSet(ref mainPageLinks);
 
             // Get BestCSData, which is a tuple of the bestCS in links, the DOM for each page and the template frequency for the CS.
-            await Task.Run(() => GetBestCompleteSubdigraph(mainPageLinks, mainPageDocument)).ConfigureAwait(true);
+            await Task.Run(() => GetBestCompleteSubdigraph(mainPageLinks)).ConfigureAwait(true);
 
             // Tags that don't appear are not really interesting.
             var templateFrequency = websiteTemplate.Where(tagCountPair => tagCountPair.Value != 0).ToDictionary(tagCountPair => tagCountPair.Key, tagCountPair => tagCountPair.Value);
@@ -173,13 +177,18 @@ namespace NLPWebScraper
             return allCompleteSubdigraphs;
         }
 
-        private async Task GetBestCompleteSubdigraph(HashSet<string> mainPageLinks, IHtmlDocument mainPageDocument)
+        private async Task GetBestCompleteSubdigraph(HashSet<string> mainPageLinks)
         {
             HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
             HashSet<Tuple<double, HashSet<string>>> testedGraphs = new HashSet<Tuple<double, HashSet<string>>>();
 
             foreach (var link in mainPageLinks)
             {
+                // Skip links that sidetrack us to other sites.
+                Uri currentLinkUri = new Uri(link);
+                if (currentLinkUri == null || new Uri(siteUrl).Host != currentLinkUri.Host)
+                    continue;
+
                 // Get the DOM of the current subpage.
                 var webPage = await GetSubPageFromLink(link).ConfigureAwait(true);
                 if (webPage == null)
@@ -187,10 +196,6 @@ namespace NLPWebScraper
 
                 // Take note of already processed links.
                 processedLinks.Add(link);
-
-                // Skip links that sidetrack us to other sites.
-                if (webPage.Domain != mainPageDocument.Domain)
-                    continue;
 
                 // Take all the links that run from this page and intersect them with the links from the main page (find menu links).
                 var existingLinks = webPage.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != link)
@@ -233,36 +238,8 @@ namespace NLPWebScraper
                         // Compute the frequency dictionary for every DOM.
                         var pagesFrequencyDictionaryList = webDocuments.Select(dom => dom.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count())).ToList();
 
-                        // Get a set of all the tags that appear.
-                        HashSet<string> allHTMLTags = new HashSet<string>();
-                        pagesFrequencyDictionaryList.ForEach(pageFrequencyDictionary => pageFrequencyDictionary.Keys.ToList().ForEach(tag => allHTMLTags.Add(tag)));
-
-                        // "Pad" the dictionaries with their respective missing entries.
-                        foreach (var pageDictionary in pagesFrequencyDictionaryList)
-                        {
-                            foreach (var tag in allHTMLTags)
-                            {
-                                if (!pageDictionary.Keys.Contains(tag))
-                                    pageDictionary[tag] = 0;
-                            }
-                        }
-
-                        // Check standard deviation average.
-                        Dictionary<string, double> templateStandardDeviation = new Dictionary<string, double>();
-
-                        var tagsArray = allHTMLTags.ToArray();
-                        for (int iTagIdx = 0; iTagIdx < allHTMLTags.Count; iTagIdx++)
-                        {
-                            List<int> tagValues = new List<int>();
-                            foreach (var pageDictionary in pagesFrequencyDictionaryList)
-                                tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
-
-                            websiteTemplate[tagsArray[iTagIdx]] = tagValues.GetMedian();
-                            templateStandardDeviation[tagsArray[iTagIdx]] = tagValues.GetStandardDeviation();
-                        }
-
-                        double averageStandardDeviation = templateStandardDeviation.Values.Sum() / templateStandardDeviation.Values.Count;
-                        if (averageStandardDeviation > 0 && averageStandardDeviation < thresholdStandardDeviance)
+                        double averageStandardDeviation = GetSimilarityBetweenTemplates(pagesFrequencyDictionaryList);
+                        if (averageStandardDeviation > 0 && averageStandardDeviation < thresholdStandardDevianceTemplate)
                         {
                             foundSubdigraph = true;
                             break;
@@ -291,8 +268,11 @@ namespace NLPWebScraper
         {
             List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
 
+            int validPagesNumber = scrapingResults.Count(scrapingResult => scrapingResult.isValid);
+            var nonValidWebPages = webDocuments.GetRange(validPagesNumber, webDocuments.Count - validPagesNumber);
+
             // Filter away the elements that have no text content.
-            var firstIterationFilteredDocuments = webDocuments.Select(dom => dom.All.ToList()
+            var firstIterationFilteredDocuments = nonValidWebPages.Select(dom => dom.All.ToList()
                 .Where(element => !string.IsNullOrEmpty(element.TextContent) &&
                 (element is IHtmlDivElement || element is IHtmlParagraphElement || element is IHtmlTableCellElement))
                 .ToList()).ToList();
@@ -324,7 +304,7 @@ namespace NLPWebScraper
                 var document = firstIterationFilteredDocuments[iDocumentIdx];
 
                 DocumentScrapingResult documentScrapingResult = new DocumentScrapingResult();
-                documentScrapingResult.title = webDocuments[iDocumentIdx].Title;
+                documentScrapingResult.title = nonValidWebPages[iDocumentIdx].Title;
                 documentScrapingResult.linkToPage = bestCS.ToList()[iDocumentIdx];
 
                 // List of <element, text density, hyperlink density> tuples.
@@ -383,6 +363,7 @@ namespace NLPWebScraper
                 filteredDocumentNodes.Add(documentScrapingResult);
             }
 
+            filteredDocumentNodes.AddRange(scrapingResults.GetRange(0, validPagesNumber));
             return filteredDocumentNodes;
         }
 
@@ -394,6 +375,9 @@ namespace NLPWebScraper
 
             foreach (var documentNodes in scrapingResults)
             {
+                if (documentNodes.isValid)
+                    continue;
+
                 documentNodes.scrapingResults.ForEach(node => commonStrings.ForEach(commonString => node.element.TextContent = node.element.TextContent.Replace(commonString, string.Empty)));
                 documentNodes.scrapingResults = documentNodes.scrapingResults.Where(node => node.element.TextContent.Length > 0).ToList();
             }
@@ -404,6 +388,9 @@ namespace NLPWebScraper
             // Aggregate all text content.
             foreach (var documentResult in scrapingResults)
             {
+                if (documentResult.isValid)
+                    continue;
+
                 documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
 
                 var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
@@ -452,14 +439,47 @@ namespace NLPWebScraper
             linksHashSet = linksHashSet.Where(link => link.Length > siteUrl.Length).ToHashSet();
 
             // Sort remaining links by length.
-            linksHashSet = linksHashSet.OrderByDescending(link => link.Length).ToHashSet();
+            //linksHashSet = linksHashSet.OrderByDescending(link => link.Length).ToHashSet();
+        }
+
+        private double GetSimilarityBetweenTemplates(List<Dictionary<string, int>> mainAndCurrentPageTemplates)
+        {
+            // Get a set of all the tags that appear.
+            HashSet<string> allHTMLTags = new HashSet<string>();
+            mainAndCurrentPageTemplates.ForEach(pageFrequencyDictionary => pageFrequencyDictionary.Keys.ToList().ForEach(tag => allHTMLTags.Add(tag)));
+
+            // "Pad" the dictionaries with their respective missing entries.
+            foreach (var pageDictionary in mainAndCurrentPageTemplates)
+            {
+                foreach (var tag in allHTMLTags)
+                {
+                    if (!pageDictionary.Keys.Contains(tag))
+                        pageDictionary[tag] = 0;
+                }
+            }
+
+            // Check standard deviation average.
+            Dictionary<string, double> templateStandardDeviation = new Dictionary<string, double>();
+
+            var tagsArray = allHTMLTags.ToArray();
+            for (int iTagIdx = 0; iTagIdx < allHTMLTags.Count; iTagIdx++)
+            {
+                List<int> tagValues = new List<int>();
+                foreach (var pageDictionary in mainAndCurrentPageTemplates)
+                    tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
+
+                websiteTemplate[tagsArray[iTagIdx]] = tagValues.GetMedian();
+                templateStandardDeviation[tagsArray[iTagIdx]] = tagValues.GetStandardDeviation();
+            }
+
+            return templateStandardDeviation.Values.Sum() / templateStandardDeviation.Values.Count;
         }
         #endregion
 
         #endregion
 
         #region Information gathering
-        private async Task<IHtmlDocument> AddLinksToSetAndRefresh(HashSet<string> linksHashSet, string link)
+        private async Task<Tuple<IHtmlDocument, HashSet<string>>> AddLinksToSetAndRefresh(HashSet<string> linksHashSet, string link)
         {
             var document = await GetSubPageFromLink(link).ConfigureAwait(true);
             if (document == null)
@@ -472,7 +492,7 @@ namespace NLPWebScraper
 
             RefreshLinksHashSet(ref linksHashSet);
 
-            return document;
+            return new Tuple<IHtmlDocument, HashSet<string>> (document, linksHashSet);
         }
 
         public async Task DynamicScrapingForInformationGathering(List<string> queryTerms, int numberOfPagesToGather)
@@ -502,7 +522,10 @@ namespace NLPWebScraper
 
             // Also add the links from the documents used for the template extraction.
             foreach (var link in processedLinks)
-                await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
+            {
+                var documentLinksTuple = await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
+                linksToProcess = documentLinksTuple.Item2;
+            }
 
             // Do different heuristics to optimize the processing of links.
             RefreshLinksHashSet(ref linksToProcess);
@@ -511,8 +534,54 @@ namespace NLPWebScraper
             while(true)
             {
                 // Stop when we've found enough pages.
-                if (bestCS.Count == numberOfPagesToGather)
-                    break;
+                if (webDocuments.Count == numberOfPagesToGather)
+                {
+                    // Node filtering from "Main content extraction from web pages based on node."
+                    scrapingResults = NodeFiltering();
+
+                    // Remove all common strings from every document. Usually, this will be the text on different buttons.
+                    FilterAllCommonStrings();
+
+                    // Apply NLP techniques for filtering.
+                    ApplyNLPFiltering();
+
+                    var documentsTFIDF = Utils.Transform(scrapingResults.Select(result => result.sentencesWords).ToList());
+
+                    for (int iDocIdx = 0; iDocIdx < documentsTFIDF.Count; iDocIdx++)
+                    {
+                        if (scrapingResults[iDocIdx].isValid)
+                            continue;
+
+                        var documentVocabulary = documentsTFIDF[iDocIdx].ToList();
+                        documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
+                        documentVocabulary.Reverse();
+                        var topFiveWordsDictionary = documentVocabulary.Take(5).ToList();
+
+                        scrapingResults[iDocIdx].topFiveRelevantWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
+                        queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
+
+                        if (scrapingResults[iDocIdx].topFiveRelevantWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
+                            scrapingResults[iDocIdx].isValid = false;
+                        else
+                            scrapingResults[iDocIdx].isValid = true;
+                    }
+
+                    for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
+                    {
+                        if (!scrapingResults[iDocIdx].isValid)
+                        {
+                            bestCS.Remove(scrapingResults[iDocIdx].linkToPage);
+                            webDocuments.RemoveAt(iDocIdx);
+                            scrapingResults.RemoveAt(iDocIdx);
+                            iDocIdx--;
+                        }
+                    }
+
+                    if (scrapingResults.Count == numberOfPagesToGather)
+                        break;
+                    else
+                        continue;
+                }
 
                 // Pop the first element out of the set.
                 string link = linksToProcess.First();
@@ -530,50 +599,27 @@ namespace NLPWebScraper
                     continue;
 
                 // Get the document and also add its outgoing links to the set of links to be processed.
-                var document = await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
+                var documentLinksTuple = await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
+
+                var document = documentLinksTuple.Item1;
+                linksToProcess = documentLinksTuple.Item2;
 
                 // Compute the frequency array for this page.
                 var currentPageDictionary = document.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count());
 
+                // Make a list of the two templates we're comparing.
                 List<Dictionary<string, int>> mainAndCurrentPageTemplates = new List<Dictionary<string, int>>
                 {
                     websiteTemplate,
                     currentPageDictionary
                 };
 
-                // Get a set of all the tags that appear.
-                HashSet<string> allHTMLTags = new HashSet<string>();
-                mainAndCurrentPageTemplates.ForEach(pageFrequencyDictionary => pageFrequencyDictionary.Keys.ToList().ForEach(tag => allHTMLTags.Add(tag)));
-
-                // "Pad" the dictionaries with their respective missing entries.
-                foreach (var pageDictionary in mainAndCurrentPageTemplates)
-                {
-                    foreach (var tag in allHTMLTags)
-                    {
-                        if (!pageDictionary.Keys.Contains(tag))
-                            pageDictionary[tag] = 0;
-                    }
-                }
-
-                // Check standard deviation average.
-                Dictionary<string, double> templateStandardDeviation = new Dictionary<string, double>();
-
-                var tagsArray = allHTMLTags.ToArray();
-                for (int iTagIdx = 0; iTagIdx < allHTMLTags.Count; iTagIdx++)
-                {
-                    List<int> tagValues = new List<int>();
-                    foreach (var pageDictionary in mainAndCurrentPageTemplates)
-                        tagValues.Add(pageDictionary[tagsArray[iTagIdx]]);
-
-                    websiteTemplate[tagsArray[iTagIdx]] = tagValues.GetMedian();
-                    templateStandardDeviation[tagsArray[iTagIdx]] = tagValues.GetStandardDeviation();
-                }
-
-                double averageStandardDeviation = templateStandardDeviation.Values.Sum() / templateStandardDeviation.Values.Count;
-                if (averageStandardDeviation < 0 || averageStandardDeviation > thresholdStandardDeviance)
+                double averageStandardDeviation = GetSimilarityBetweenTemplates(mainAndCurrentPageTemplates);
+                if (averageStandardDeviation < 0 || averageStandardDeviation > thresholdStandardDevianceGathering)
                     continue;
 
                 bestCS.Add(link);
+                webDocuments.Add(document);
             }
         }
         #endregion

@@ -87,6 +87,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Scraping\Dynamic Scraping\DynamicallyScrapedWebsite.cs" />
     <Compile Include="Scraping\Base\ScrapedWebsite.cs" />

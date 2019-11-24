@@ -43,10 +43,10 @@
                         <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com/" Grid.Column="1" Margin="5" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Number of Pages:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Name="numberOfPagesTextBox" Text="50" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Name="numberOfPagesTextBox" Text="5" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Query Terms:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Name="queryTermsTextBox" Text="SIM;iOS;Exploit;APT Map" Width="Auto" Height="20" Margin="5"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Name="queryTermsTextBox" Text="iOS" Width="Auto" Height="20" Margin="5"/>
                     </Grid>
                 </GroupBox>
 
