@@ -27,6 +27,8 @@ namespace NLPWebScraper
         public MainWindow()
         {
             InitializeComponent();
+            dynamicScrapingCheckbox.IsChecked = true;
+            dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
             LoadUpSupportedWebsites();
         }
 
@@ -39,7 +41,7 @@ namespace NLPWebScraper
                 if (scrapedWebsite == null)
                     continue;
 
-                await Task.Run(() => scrapedWebsite.DynamicScraping()).ConfigureAwait(true);
+                await Task.Run(() => scrapedWebsite.DynamicScrapingForTemplateExtraction()).ConfigureAwait(true);
 
                 var documentsTFIDF = Utils.Transform((scrapedWebsites[1] as DynamicallyScrapedWebsite).scrapingResults.Select(result => result.sentencesWords).ToList());
 
@@ -108,6 +110,9 @@ namespace NLPWebScraper
 
                     iDocumentIdx++;
                 }
+
+                // In progress: Information gathering.
+                await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
             }
 
             TextBox textbox = new TextBox()
@@ -258,7 +263,6 @@ namespace NLPWebScraper
 
         private void ToggleScrapingMode(object sender, RoutedEventArgs e)
         {
-            staticScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == false;
             dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
         }
 

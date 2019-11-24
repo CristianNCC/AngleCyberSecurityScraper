@@ -153,7 +153,7 @@ namespace NLPWebScraper
                     {
                         string lowerCaseWord = word.ToLower();
 
-                        if (StopWords.stopWordsList.Contains(lowerCaseWord))
+                        if (StopWords.GetStopWordsList().Contains(lowerCaseWord))
                             continue;
 
                         if (wordCountList.ContainsKey(lowerCaseWord))

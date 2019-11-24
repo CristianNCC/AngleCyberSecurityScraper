@@ -22,3 +22,4 @@ C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\bin\Debug\SharpEntropy.dll
 C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.csproj.CopyComplete
 C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.dll
 C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.pdb
+C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.csprojAssemblyReference.cache

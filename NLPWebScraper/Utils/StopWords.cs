@@ -9,7 +9,7 @@ namespace NLPWebScraper
     // As taken from here: https://github.com/primaryobjects/TFIDF/blob/master/TFIDFExample/StopWords.cs .
     public static class StopWords
     {
-        public static string[] stopWordsList = new string[]
+        private static string[] stopWordsList = new string[]
         {
             "a",
             "about",
@@ -462,5 +462,15 @@ namespace NLPWebScraper
             "you've",
             "z",
         };
+
+        public static string[] GetStopWordsList()
+        {
+            return stopWordsList;
+        }
+
+        public static void SetStopWordsList(string[] value)
+        {
+            stopWordsList = value;
+        }
     }
 }
