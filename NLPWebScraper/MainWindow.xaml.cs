@@ -242,11 +242,16 @@ namespace NLPWebScraper
             if (dynamicScrapingCheckbox.IsChecked == true)
             {
                 scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
-                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text));
+                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, UpdateTextBoxWithStatus));
                 DynamicScraping();
             }
             else
                 StaticScraping();
+        }
+
+        private void UpdateTextBoxWithStatus(int numberOfPagesSoFar, int numberOfPagesInQueue, int numberOfAdequatePagesFound)
+        {
+            scrapingStatusTextbox.Text = "Scraped: " + numberOfPagesSoFar + ".   Queue: " + numberOfPagesInQueue + ".   Found: " + numberOfAdequatePagesFound + ".";
         }
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)

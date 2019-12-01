@@ -32,6 +32,7 @@
                             <RowDefinition/>
                             <RowDefinition/>
                             <RowDefinition/>
+                            <RowDefinition/>
                         </Grid.RowDefinitions>
 
                         <Grid.ColumnDefinitions>
@@ -40,13 +41,16 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="Target website:"  Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com/" Grid.Column="1" Margin="5" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com/" Grid.Column="1" Margin="5 0 5 0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Number of Pages:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Name="numberOfPagesTextBox" Text="5" Margin="5" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Name="numberOfPagesTextBox" Text="5" Margin="5 0 5 0" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Query Terms:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Name="queryTermsTextBox" Text="iOS" Width="Auto" Height="20" Margin="5"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Name="queryTermsTextBox" Text="iOS" Width="Auto" Height="20" Margin="5 0 5 0"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Scraping Status:" Margin="5" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Name="scrapingStatusTextbox" Width="Auto" Height="20" Margin="5 0 5 0" IsReadOnly="True"/>
                     </Grid>
                 </GroupBox>
 

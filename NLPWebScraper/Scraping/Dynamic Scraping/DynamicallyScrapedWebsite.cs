@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace NLPWebScraper
 {
@@ -72,6 +74,8 @@ namespace NLPWebScraper
     #region Dynamic scraping
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
+        public delegate void UpdateGUIMethod(int numberOfPagesSoFar, int numberOfPagesInQueue, int numberOfAdequatePagesFound);
+
         #region Members and constructor
         public HashSet<string> bestCS = new HashSet<string>();
         List<IHtmlDocument> webDocuments = new List<IHtmlDocument>();
@@ -79,12 +83,18 @@ namespace NLPWebScraper
         public List<DocumentScrapingResult> scrapingResults = new List<DocumentScrapingResult>();
         public HashSet<string> processedLinks = new HashSet<string>();
 
+        public int pagesScrapedSoFar = 0;
+        public UpdateGUIMethod callbackToGUI;
+
         private const int maximalWordCount = 20;
         private const int maximalSubdigraphSize = 4;
         private const float thresholdStandardDevianceTemplate = 15.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
 
-        public DynamicallyScrapedWebsite(string siteUrl) : base(siteUrl) { }
+        public DynamicallyScrapedWebsite(string siteUrl, UpdateGUIMethod callback) : base(siteUrl) 
+        {
+            callbackToGUI = callback;
+        }
         #endregion
 
         #region Template extraction
@@ -135,6 +145,7 @@ namespace NLPWebScraper
                 }
             }
 
+            pagesScrapedSoFar++;
             return webPage;
         }
 
@@ -439,7 +450,7 @@ namespace NLPWebScraper
             linksHashSet = linksHashSet.Where(link => link.Length > siteUrl.Length).ToHashSet();
 
             // Sort remaining links by length.
-            //linksHashSet = linksHashSet.OrderByDescending(link => link.Length).ToHashSet();
+            linksHashSet = linksHashSet.OrderByDescending(link => link.Length).ToHashSet();
         }
 
         private double GetSimilarityBetweenTemplates(List<Dictionary<string, int>> mainAndCurrentPageTemplates)
@@ -479,20 +490,16 @@ namespace NLPWebScraper
         #endregion
 
         #region Information gathering
-        private async Task<Tuple<IHtmlDocument, HashSet<string>>> AddLinksToSetAndRefresh(HashSet<string> linksHashSet, string link)
+        private HashSet<string> AddLinksToSetAndRefresh(IHtmlDocument document, HashSet<string> linksHashSet, string link)
         {
-            var document = await GetSubPageFromLink(link).ConfigureAwait(true);
-            if (document == null)
-                return null;
-
-            var documentLinks = document.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != link)
+            var documentLinks = document.Links.Where(webPageLink => (webPageLink as IHtmlAnchorElement)?.Href != link && !processedLinks.Contains((webPageLink as IHtmlAnchorElement)?.Href))
                 .Select(webPageFilteredLink => (webPageFilteredLink as IHtmlAnchorElement)?.Href).ToList();
 
             documentLinks.ForEach(documentLink => linksHashSet.Add(documentLink));
 
             RefreshLinksHashSet(ref linksHashSet);
 
-            return new Tuple<IHtmlDocument, HashSet<string>> (document, linksHashSet);
+            return linksHashSet;
         }
 
         public async Task DynamicScrapingForInformationGathering(List<string> queryTerms, int numberOfPagesToGather)
@@ -523,8 +530,11 @@ namespace NLPWebScraper
             // Also add the links from the documents used for the template extraction.
             foreach (var link in processedLinks)
             {
-                var documentLinksTuple = await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
-                linksToProcess = documentLinksTuple.Item2;
+                var document = await GetSubPageFromLink(link).ConfigureAwait(true);
+                if (document == null)
+                    continue;
+
+                linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
             }
 
             // Do different heuristics to optimize the processing of links.
@@ -555,7 +565,7 @@ namespace NLPWebScraper
                         var documentVocabulary = documentsTFIDF[iDocIdx].ToList();
                         documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
                         documentVocabulary.Reverse();
-                        var topFiveWordsDictionary = documentVocabulary.Take(5).ToList();
+                        var topFiveWordsDictionary = documentVocabulary.Take(10).ToList();
 
                         scrapingResults[iDocIdx].topFiveRelevantWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
                         queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
@@ -576,6 +586,12 @@ namespace NLPWebScraper
                             iDocIdx--;
                         }
                     }
+
+                    // We are not on the main (GUI) thread so we need to update the GUI with an invoke.
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        callbackToGUI(pagesScrapedSoFar, linksToProcess.Count, scrapingResults.Count);
+                    });
 
                     if (scrapingResults.Count == numberOfPagesToGather)
                         break;
@@ -598,11 +614,9 @@ namespace NLPWebScraper
                 if (currentLinkUri == null || mainPageHost != currentLinkUri.Host)
                     continue;
 
-                // Get the document and also add its outgoing links to the set of links to be processed.
-                var documentLinksTuple = await Task.Run(() => AddLinksToSetAndRefresh(linksToProcess, link)).ConfigureAwait(true);
-
-                var document = documentLinksTuple.Item1;
-                linksToProcess = documentLinksTuple.Item2;
+                var document = await GetSubPageFromLink(link).ConfigureAwait(true);
+                if (document == null)
+                    continue;
 
                 // Compute the frequency array for this page.
                 var currentPageDictionary = document.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count());
@@ -618,8 +632,12 @@ namespace NLPWebScraper
                 if (averageStandardDeviation < 0 || averageStandardDeviation > thresholdStandardDevianceGathering)
                     continue;
 
+                // Add the links and documents.
                 bestCS.Add(link);
                 webDocuments.Add(document);
+
+                // Add outgoing links to the set of links to be processed.
+                linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
             }
         }
         #endregion
