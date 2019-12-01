@@ -59,7 +59,7 @@ namespace OpenNLP.Tools.Util
 		/// </returns>
 		public virtual int Size()
 		{
-			return this.Count;
+			return Count;
 		}
 	}
 }

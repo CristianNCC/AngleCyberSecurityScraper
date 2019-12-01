@@ -319,11 +319,11 @@ namespace OpenNLP.Tools.Parser
 			}
 
 			Parse testParse = (Parse) o;
-			if (this.Probability > testParse.Probability)
+			if (Probability > testParse.Probability)
 			{
 				return - 1;
 			}
-			else if (this.Probability < testParse.Probability)
+			else if (Probability < testParse.Probability)
 			{
 				return 1;
 			}
@@ -364,13 +364,13 @@ namespace OpenNLP.Tools.Parser
 		{
 			if (o == null) return false;
 
-			if (this.GetType() != o.GetType()) 
+			if (GetType() != o.GetType()) 
 			{
 				return false;
 			}
 
 			Parse testParse = (Parse)o;
-			return (this.Probability == testParse.Probability);
+			return (Probability == testParse.Probability);
 		}  
 
 		public override int GetHashCode ()
@@ -561,7 +561,7 @@ namespace OpenNLP.Tools.Parser
 		{
 			if (this == node)
 			{
-				return this.Parent;
+				return Parent;
 			}
             Util.HashSet<Parse> parents = new Util.HashSet<Parse>();
 			Parse parentParse = this;

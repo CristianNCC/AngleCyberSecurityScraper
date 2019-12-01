@@ -39,7 +39,7 @@ namespace OpenNLP.Tools.Util
 		/// </param>
 		public HashSet(ICollection<T> collection)
 		{
-			this.AddRange(collection);
+			AddRange(collection);
 		}
 	       
 		/// <summary>
@@ -50,7 +50,7 @@ namespace OpenNLP.Tools.Util
 		/// </param>
 		public HashSet(int capacity)
 		{
-			this.Capacity = capacity;
+			Capacity = capacity;
 		}
 	    
 		/// <summary>
@@ -64,7 +64,7 @@ namespace OpenNLP.Tools.Util
 		/// </param>
 		public HashSet(int capacity, float loadFactor)
 		{
-			this.Capacity = capacity;
+			Capacity = capacity;
 		}
 
 		/// <summary>

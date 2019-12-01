@@ -124,7 +124,7 @@ namespace OpenNLP.Tools.Util
                     List<T> newList = new List<T>(value);
 					for (int currentItem = 0; currentItem < value; currentItem++)
 					{
-						newList.Add(this.Extract());
+						newList.Add(Extract());
 					}
 					mList = newList;
 				}
@@ -225,7 +225,7 @@ namespace OpenNLP.Tools.Util
 		/// </summary>
 		public virtual void ResetSize()
 		{
-			this.Size = mSize;
+			Size = mSize;
 		}
 				
 		/// <summary>

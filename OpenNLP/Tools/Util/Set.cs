@@ -61,7 +61,7 @@ namespace OpenNLP.Tools.Util
 		/// </returns>
 		public new virtual bool Add(T item)
 		{
-            if (this.Contains(item))
+            if (Contains(item))
             {
                 return false;
             }
@@ -88,7 +88,7 @@ namespace OpenNLP.Tools.Util
 			{
                 foreach (T item in collection)
                 {
-                    result = this.Add(item);
+                    result = Add(item);
                 }
 			}
 			return result;
@@ -108,7 +108,7 @@ namespace OpenNLP.Tools.Util
 			bool result = false;
             foreach (T item in collection)
             {
-                if (!(result = this.Contains(item)))
+                if (!(result = Contains(item)))
                 {
                     break;
                 }
@@ -124,7 +124,7 @@ namespace OpenNLP.Tools.Util
 		/// </returns>
 		public virtual bool IsEmpty()
 		{
-			return (this.Count == 0);
+			return (Count == 0);
 		}
 	 	 
 		/// <summary>
@@ -139,7 +139,7 @@ namespace OpenNLP.Tools.Util
 		public new virtual bool Remove(T elementToRemove)
 		{
 			bool result = false;
-			if (this.Contains(elementToRemove))
+			if (Contains(elementToRemove))
 			{
 				result = true;
 			}
@@ -161,11 +161,11 @@ namespace OpenNLP.Tools.Util
 			bool result = false;
             foreach (T item in collection)
             {
-                if ((!result) && (this.Contains(item)))
+                if ((!result) && (Contains(item)))
                 {
                     result = true;
                 }
-                this.Remove(item);
+                Remove(item);
             }
 			return result;
 		}
@@ -188,8 +188,8 @@ namespace OpenNLP.Tools.Util
 			while (enumerator.MoveNext())
 				if (!currentSet.Contains(enumerator.Current))
 				{
-					result = this.Remove(enumerator.Current);
-					enumerator = this.GetEnumerator();
+					result = Remove(enumerator.Current);
+					enumerator = GetEnumerator();
 				}
 			return result;
 		}

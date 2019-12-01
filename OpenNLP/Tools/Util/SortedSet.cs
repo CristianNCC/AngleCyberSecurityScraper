@@ -50,7 +50,7 @@ namespace OpenNLP.Tools.Util
 		/// </returns>
 		public virtual T First()
 		{
-			IEnumerator<T> enumerator = this.GetEnumerator();
+			IEnumerator<T> enumerator = GetEnumerator();
 			enumerator.MoveNext();
 			return enumerator.Current;
 		}
@@ -78,7 +78,7 @@ namespace OpenNLP.Tools.Util
 		/// <returns>Returns the last element from the set.</returns>
 		public virtual T Last()
 		{
-			IEnumerator<T> enumerator = this.GetEnumerator();
+			IEnumerator<T> enumerator = GetEnumerator();
 			T element = default(T);
 			while(enumerator.MoveNext())
 			{

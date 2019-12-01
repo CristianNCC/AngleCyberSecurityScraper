@@ -121,7 +121,7 @@ namespace OpenNLP.Tools.Util
 		{
 			int spanStart = span.Start;
 			//either span's start is in this or this's start is in span
-			return (this.Contains(span) || span.Contains(this) ||
+			return (Contains(span) || span.Contains(this) ||
 				(mStart <= spanStart && spanStart < mEnd ||
 				spanStart <= mStart && mStart < span.End));
 		}
@@ -139,7 +139,7 @@ namespace OpenNLP.Tools.Util
 		{
 			int spanStart = span.Start;
 			//either span's Start is in this or this's Start is in span
-			return (!this.Contains(span) && !span.Contains(this) && 
+			return (!Contains(span) && !span.Contains(this) && 
 				(mStart <= spanStart && spanStart < mEnd ||
 				spanStart <= mStart && mStart < span.End));
 		}
@@ -174,7 +174,7 @@ namespace OpenNLP.Tools.Util
 
 		public override int GetHashCode() 
 		{
-			return((Start << 16) | (0x0000FFFF | this.End));
+			return((Start << 16) | (0x0000FFFF | End));
 		}
   
 		public override bool Equals(object o) 
