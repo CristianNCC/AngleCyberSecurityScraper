@@ -21,6 +21,9 @@ namespace NLPWebScraper
         public List<string> queryTerms;
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
 
+        // If scraping for information is false, then the scraping will stop at finding the template.
+        public bool scrapeOnlyForTemplate = false;
+
         // List of dictionaries where Key=Term and list of tuples <url, articleTitle, titlePolarity>
         public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = new List<Dictionary<string, List<Tuple<string, string, int>>>>();
 
@@ -43,8 +46,11 @@ namespace NLPWebScraper
 
                 await Task.Run(() => scrapedWebsite.DynamicScrapingForTemplateExtraction()).ConfigureAwait(true);
 
-                // In progress: Information gathering.
-                await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
+                if (!scrapeOnlyForTemplate)
+                {
+                    // In progress: Information gathering.
+                    await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
+                }
 
                 int iDocumentIdx = 0;
                 foreach (var documentResult in scrapedWebsite.scrapingResults)
@@ -90,15 +96,18 @@ namespace NLPWebScraper
 
                     results += Environment.NewLine;
 
-                    results += "Most important words in document: ";
-                    for (int iWordIdx = 0; iWordIdx < 5; iWordIdx++)
+                    if (documentResult.topFiveRelevantWords.Count > 0)
                     {
-                        results += documentResult.topFiveRelevantWords[iWordIdx] + " ";
+                        results += "Most important words in document: ";
+                        for (int iWordIdx = 0; iWordIdx < 5; iWordIdx++)
+                        {
+                            results += documentResult.topFiveRelevantWords[iWordIdx] + " ";
 
-                        if (iWordIdx != 4)
-                            results += ", ";
-                        else
-                            results += ".";
+                            if (iWordIdx != 4)
+                                results += ", ";
+                            else
+                                results += ".";
+                        }
                     }
 
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
@@ -269,6 +278,11 @@ namespace NLPWebScraper
         {
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
+        }
+
+        private void ScrapeForTemplateIsChecked(object sender, RoutedEventArgs e)
+        {
+            scrapeOnlyForTemplate = scrapeOnlyForTemplateCheckbox.IsChecked == true;
         }
     }
 }

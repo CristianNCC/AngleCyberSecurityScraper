@@ -63,5 +63,18 @@ namespace NLPWebScraper
             textDensity = 0.0f;
         }
     }
-        #endregion
+
+    public class LinkToBeProcessed
+    {
+        public string link = null;
+        public string parentLink = null;
+        public int priority = 1;
+        public LinkToBeProcessed(string link, string parentLink, int priority)
+        {
+            this.link = link;
+            this.parentLink = parentLink;
+            this.priority = priority;
+        }
+    }
+    #endregion
 }
