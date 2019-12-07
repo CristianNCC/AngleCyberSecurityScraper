@@ -1,8 +1,21 @@
 ﻿using System.Collections.Generic;
+using System;
 
 namespace NLPWebScraper
 {
     #region Helper classes
+    public class SiteTopWordsEntry
+    {
+        public string pageUrl = null;
+        public List<string> topWords = null;
+
+        public SiteTopWordsEntry(string pageUrl, List<string> topWords)
+        {
+            this.pageUrl = pageUrl;
+            this.topWords = topWords;
+        }
+    }
+
     public class Connection<T>
     {
         public Connection(T end1, T end2)

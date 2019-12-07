@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace NLPWebScraper
 {
@@ -22,14 +24,39 @@ namespace NLPWebScraper
         public int pagesScrapedSoFar = 0;
         public UpdateGUIMethod callbackToGUI;
 
+        public List<SiteTopWordsEntry> extractionDatabase = new List<SiteTopWordsEntry>();
+
+        private const int maxConnectionsCount = 3000;
         private const int maximalWordCount = 20;
-        private const int maximalSubdigraphSize = 4;
-        private const float thresholdStandardDevianceTemplate = 15.0f;
+        private const int maximalSubdigraphSize = 8;
+        private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
 
         public DynamicallyScrapedWebsite(string siteUrl, UpdateGUIMethod callback) : base(siteUrl) 
         {
             callbackToGUI = callback;
+            DeserializeSiteInformation("siteDatabase.json");
+        }
+        #endregion
+
+        #region Serialization/Deserialization
+        public void SerializeSiteInformation()
+        {
+            string output = JsonConvert.SerializeObject(extractionDatabase);
+            File.WriteAllText("siteDatabase.json", output);
+        }
+
+        public void DeserializeSiteInformation(string jsonPath)
+        {
+            if (!File.Exists(jsonPath))
+                return;
+
+            string output = File.ReadAllText("siteDatabase.json");
+
+            if (string.IsNullOrEmpty(output))
+                return;
+
+            extractionDatabase = JsonConvert.DeserializeObject<List<SiteTopWordsEntry>>(output);
         }
         #endregion
 
@@ -102,6 +129,9 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end2 == pLink && connectionTwo.end1 == connectionOne.end2)
                             {
+                                if (newCS.Count > 1 && newCS.First().Count(ch => ch == '/') == connectionTwo.end1.Count(ch => ch == '/') &&
+                                    newCS.First().Count(ch => ch == '/') == connectionTwo.end2.Count(ch => ch == '/'))
+
                                 newCS.Add(connectionTwo.end1);
                                 newCS.Add(connectionTwo.end2);
                             }
@@ -113,6 +143,9 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end1 == pLink && connectionTwo.end2 == connectionOne.end1)
                             {
+                                if (newCS.Count > 1 && newCS.First().Count(ch => ch == '/') == connectionTwo.end1.Count(ch => ch == '/') &&
+                                    newCS.First().Count(ch => ch == '/') == connectionTwo.end2.Count(ch => ch == '/'))
+
                                 newCS.Add(connectionTwo.end1);
                                 newCS.Add(connectionTwo.end2);
                             }
@@ -130,7 +163,8 @@ namespace NLPWebScraper
         private async Task GetBestCompleteSubdigraph(HashSet<string> mainPageLinks)
         {
             HashSet<Connection<string>> connections = new HashSet<Connection<string>>();
-            HashSet<Tuple<double, HashSet<string>>> testedGraphs = new HashSet<Tuple<double, HashSet<string>>>();
+            HashSet<Tuple<double, HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>> testedGraphs = 
+                new HashSet<Tuple<double, HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>>();
 
             foreach (var link in mainPageLinks)
             {
@@ -164,6 +198,11 @@ namespace NLPWebScraper
                 // Get all complete subdigraphs.
                 List<HashSet<string>> allCompleteSubdigraphs = GetAllCompleteSubdigraphs(connections);
                 bool foundSubdigraph = false;
+
+                // If the number of connections grows to be too large, exit.
+                if (connections.Count > maxConnectionsCount)
+                    break;
+
                 foreach (var iterationSubdigraph in allCompleteSubdigraphs)
                 {
                     if (iterationSubdigraph.Count >= maximalSubdigraphSize)
@@ -188,6 +227,7 @@ namespace NLPWebScraper
                         // Compute the frequency dictionary for every DOM.
                         var pagesFrequencyDictionaryList = webDocuments.Select(dom => dom.All.GroupBy(element => element.GetType().ToString()).ToDictionary(x => x.Key, x => x.Count())).ToList();
 
+                        // If the standard deviation suits our threshold, stop. If it does not, then remember some data about it.
                         double averageStandardDeviation = GetSimilarityBetweenTemplates(pagesFrequencyDictionaryList);
                         if (averageStandardDeviation > 0 && averageStandardDeviation < thresholdStandardDevianceTemplate)
                         {
@@ -196,7 +236,9 @@ namespace NLPWebScraper
                         }
                         else
                         {
-                            testedGraphs.Add(new Tuple<double, HashSet<string>>(averageStandardDeviation, new HashSet<string>(bestCS)));
+                            testedGraphs.Add(new Tuple<double, HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>
+                                (averageStandardDeviation, new HashSet<string>(bestCS), new List<IHtmlDocument>(webDocuments), new Dictionary<string, int>(websiteTemplate)));
+
                             websiteTemplate.Clear();
                             bestCS.Clear();
                             webDocuments.Clear();
@@ -210,8 +252,14 @@ namespace NLPWebScraper
                 }
 
                 if (foundSubdigraph)
-                    break;
+                    return;
             }
+
+            // If no graph is perfectly suitable according to the threshold, just return a best-effort graph.
+            var bestTestedGraph = testedGraphs.Where(testedGraph => testedGraph.Item1 == testedGraphs.Min(minDeviation => minDeviation.Item1)).First();
+            bestCS = bestTestedGraph.Item2;
+            webDocuments = bestTestedGraph.Item3;
+            websiteTemplate = bestTestedGraph.Item4;
         }
 
         private List<DocumentScrapingResult> NodeFiltering()
@@ -220,6 +268,9 @@ namespace NLPWebScraper
 
             int validPagesNumber = scrapingResults.Count(scrapingResult => scrapingResult.isValid);
             var nonValidWebPages = webDocuments.GetRange(validPagesNumber, webDocuments.Count - validPagesNumber);
+
+            if (nonValidWebPages.Count == 0)
+                return scrapingResults;
 
             // Filter away the elements that have no text content.
             var firstIterationFilteredDocuments = nonValidWebPages.Select(dom => dom.All.ToList()
@@ -389,7 +440,7 @@ namespace NLPWebScraper
             linksHashSet = linksHashSet.Where(linkToProcess => linkToProcess.link.Length > siteUrl.Length).ToHashSet();
 
             // Sort remaining links by length.
-            linksHashSet = linksHashSet.OrderByDescending(linkToProcess => linkToProcess.priority).ThenBy(linkToProcess => linkToProcess.link.Length).ToHashSet();
+            linksHashSet = linksHashSet.OrderByDescending(linkToProcess => linkToProcess.priority).ThenByDescending(linkToProcess => linkToProcess.link.Length).ToHashSet();
         }
 
         private double GetSimilarityBetweenTemplates(List<Dictionary<string, int>> mainAndCurrentPageTemplates)
@@ -476,14 +527,49 @@ namespace NLPWebScraper
                 linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
             }
 
+            // Check if we already have relevant information in the database.
+            foreach (var databaseEntry in extractionDatabase)
+            {
+                if (databaseEntry.topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() != 0)
+                {
+                    if (bestCS.Contains(databaseEntry.pageUrl))
+                        continue;
+
+                    var document = await GetSubPageFromLink(databaseEntry.pageUrl).ConfigureAwait(true);
+                    if (document == null)
+                        continue;
+
+                    bestCS.Add(databaseEntry.pageUrl);
+                    webDocuments.Add(document);
+                }
+            }
+
+            scrapingResults = NodeFiltering();
+            FilterAllCommonStrings();
+            ApplyNLPFiltering();
+
+            // Mark elements added from the database as valid.
+            foreach (var scrapingResult in scrapingResults)
+            {
+                foreach (var databaseEntry in extractionDatabase)
+                {
+                    if (databaseEntry.pageUrl == scrapingResult.linkToPage)
+                    {
+                        scrapingResult.topFiveRelevantWords = databaseEntry.topWords;
+                        scrapingResult.isValid = true;
+                    }
+                }
+            }
+
             // Do different heuristics to optimize the processing of links.
             RefreshLinksHashSet(ref linksToProcess);
 
+            List<string> databasePages = extractionDatabase.Select(entry => entry.pageUrl).ToList();
             // The main working loop.
-            while(true)
+            while (true)
             {
                 // Stop when we've found enough pages.
-                if (webDocuments.Count == numberOfPagesToGather)
+                if (webDocuments.Count >= numberOfPagesToGather)
                 {
                     // Node filtering from "Main content extraction from web pages based on node."
                     scrapingResults = NodeFiltering();
@@ -508,6 +594,8 @@ namespace NLPWebScraper
 
                         scrapingResults[iDocIdx].topFiveRelevantWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
                         queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
+
+                        extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topFiveRelevantWords));
 
                         if (scrapingResults[iDocIdx].topFiveRelevantWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
                         {
@@ -542,8 +630,11 @@ namespace NLPWebScraper
                         callbackToGUI(pagesScrapedSoFar, linksToProcess.Count, scrapingResults.Count);
                     });
 
-                    if (scrapingResults.Count == numberOfPagesToGather)
+                    if (scrapingResults.Count >= numberOfPagesToGather)
+                    {
+                        SerializeSiteInformation();
                         break;
+                    }
                     else
                         continue;
                 }
@@ -553,7 +644,7 @@ namespace NLPWebScraper
                 linksToProcess.Remove(linksToProcess.First());
 
                 // Mark the element as processed or skip it if it has already been processed.
-                if (processedLinks.Contains(link))
+                if (processedLinks.Contains(link) || databasePages.Contains(link))
                     continue;
                 else
                     processedLinks.Add(link);
