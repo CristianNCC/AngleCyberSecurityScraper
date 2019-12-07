@@ -555,7 +555,7 @@ namespace NLPWebScraper
                 {
                     if (databaseEntry.pageUrl == scrapingResult.linkToPage)
                     {
-                        scrapingResult.topFiveRelevantWords = databaseEntry.topWords;
+                        scrapingResult.topWords = databaseEntry.topWords;
                         scrapingResult.isValid = true;
                     }
                 }
@@ -592,12 +592,12 @@ namespace NLPWebScraper
                         documentVocabulary.Reverse();
                         var topFiveWordsDictionary = documentVocabulary.Take(10).ToList();
 
-                        scrapingResults[iDocIdx].topFiveRelevantWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
+                        scrapingResults[iDocIdx].topWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
                         queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
 
-                        extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topFiveRelevantWords));
+                        extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topWords));
 
-                        if (scrapingResults[iDocIdx].topFiveRelevantWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
+                        if (scrapingResults[iDocIdx].topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
                         {
                             scrapingResults[iDocIdx].isValid = false;
                         }

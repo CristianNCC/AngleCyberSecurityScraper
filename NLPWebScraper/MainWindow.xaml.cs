@@ -96,12 +96,12 @@ namespace NLPWebScraper
 
                     results += Environment.NewLine;
 
-                    if (documentResult.topFiveRelevantWords.Count > 0)
+                    if (documentResult.topWords.Count > 0)
                     {
                         results += "Most important words in document: ";
-                        for (int iWordIdx = 0; iWordIdx < 5; iWordIdx++)
+                        for (int iWordIdx = 0; iWordIdx < documentResult.topWords.Count; iWordIdx++)
                         {
-                            results += documentResult.topFiveRelevantWords[iWordIdx] + " ";
+                            results += documentResult.topWords[iWordIdx] + " ";
 
                             if (iWordIdx != 4)
                                 results += ", ";

@@ -39,7 +39,7 @@ namespace NLPWebScraper
         public List<List<string>> posSentences = null;
 
         public bool isValid = false;
-        public List<string> topFiveRelevantWords = new List<string>();
+        public List<string> topWords = new List<string>();
 
         public DocumentScrapingResult(string linkToPage, List<ScrapingResult> scrapingResults, string content, List<List<string>> sentencesWords, List<List<string>> posSentences)
         {
