@@ -134,7 +134,7 @@ namespace PageRank.Rank
                     err += Math.Abs(_x[node] - _xLast[node]);
                 }
 
-                if (err < N * tol)
+                //if (err < N * tol)
                 {
                     _rankVector = _x.ToDictionary(item => item.Key.Value, item => item.Value);
                     break;

@@ -400,6 +400,8 @@ namespace NLPWebScraper
                     var rankedDictionary = new PageRank<string>().Rank(documentGraph);
                     var topSentencesIndexes = rankedDictionary.ToList().OrderByDescending(sentence => sentence.Key).Take(5).ToList();
 
+                    topSentencesIndexes = topSentencesIndexes.OrderBy(sentence => sentence.Key).ToList();
+
                     foreach (var topSentencesIdx in topSentencesIndexes)
                     {
                         scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx.Key].Aggregate((i,j) => i + " " + j);
