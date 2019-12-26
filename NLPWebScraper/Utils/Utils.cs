@@ -176,5 +176,14 @@ namespace NLPWebScraper
 
             return vocabulary;
         }
+
+        public static float CalculateCosineSimilarity(float[] vecA, float[] vecB)
+        {
+            float dotProduct = vecA.DotProduct(vecB);
+            float magnitudeOfA = (float)Math.Sqrt(vecA.DotProduct(vecA));
+            float magnitudeOfB = (float)Math.Sqrt(vecB.DotProduct(vecB));
+
+            return dotProduct / (magnitudeOfA * magnitudeOfB);
+        }
     }
 }

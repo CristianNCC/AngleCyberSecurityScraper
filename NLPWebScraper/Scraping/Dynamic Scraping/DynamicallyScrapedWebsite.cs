@@ -28,7 +28,7 @@ namespace NLPWebScraper
 
         private const int maxConnectionsCount = 3000;
         private const int maximalWordCount = 20;
-        private const int maximalSubdigraphSize = 8;
+        private const int maximalSubdigraphSize = 4;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
 
@@ -129,9 +129,6 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end2 == pLink && connectionTwo.end1 == connectionOne.end2)
                             {
-                                if (newCS.Count > 1 && newCS.First().Count(ch => ch == '/') == connectionTwo.end1.Count(ch => ch == '/') &&
-                                    newCS.First().Count(ch => ch == '/') == connectionTwo.end2.Count(ch => ch == '/'))
-
                                 newCS.Add(connectionTwo.end1);
                                 newCS.Add(connectionTwo.end2);
                             }
@@ -143,9 +140,6 @@ namespace NLPWebScraper
                         {
                             if (connectionTwo.end1 == pLink && connectionTwo.end2 == connectionOne.end1)
                             {
-                                if (newCS.Count > 1 && newCS.First().Count(ch => ch == '/') == connectionTwo.end1.Count(ch => ch == '/') &&
-                                    newCS.First().Count(ch => ch == '/') == connectionTwo.end2.Count(ch => ch == '/'))
-
                                 newCS.Add(connectionTwo.end1);
                                 newCS.Add(connectionTwo.end2);
                             }
@@ -255,11 +249,14 @@ namespace NLPWebScraper
                     return;
             }
 
-            // If no graph is perfectly suitable according to the threshold, just return a best-effort graph.
-            var bestTestedGraph = testedGraphs.Where(testedGraph => testedGraph.Item1 == testedGraphs.Min(minDeviation => minDeviation.Item1)).First();
-            bestCS = bestTestedGraph.Item2;
-            webDocuments = bestTestedGraph.Item3;
-            websiteTemplate = bestTestedGraph.Item4;
+            if (testedGraphs.Count > 0)
+            {
+                // If no graph is perfectly suitable according to the threshold, just return a best-effort graph.
+                var bestTestedGraph = testedGraphs.Where(testedGraph => testedGraph.Item1 == testedGraphs.Min(minDeviation => minDeviation.Item1)).First();
+                bestCS = bestTestedGraph.Item2;
+                webDocuments = bestTestedGraph.Item3;
+                websiteTemplate = bestTestedGraph.Item4;
+            }
         }
 
         private List<DocumentScrapingResult> NodeFiltering()

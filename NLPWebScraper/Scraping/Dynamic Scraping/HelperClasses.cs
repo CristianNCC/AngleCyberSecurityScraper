@@ -33,6 +33,7 @@ namespace NLPWebScraper
         public string linkToPage;
         public string title;
         public string content;
+        public string contentSummary;
         public List<ScrapingResult> scrapingResults = null;
 
         public List<List<string>> sentencesWords = null;

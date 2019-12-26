@@ -11,6 +11,9 @@ using System.Windows.Input;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
+using Word2Vec.Net;
+using PageRank.Rank;
+using PageRank.Graph;
 
 namespace NLPWebScraper
 {
@@ -48,73 +51,21 @@ namespace NLPWebScraper
 
                 if (!scrapeOnlyForTemplate)
                 {
-                    // In progress: Information gathering.
                     await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
                 }
+                ConcatenateDataForPrint(scrapedWebsite, ref results);
+            }
+            PrintDataToGUI(results);
+        }
 
-                int iDocumentIdx = 0;
-                foreach (var documentResult in scrapedWebsite.scrapingResults)
+        private void PrintDataToGUI(string results)
+        {
+            foreach (Control control in resultsStackPanel.Children)
+            {
+                if (control.GetType() == typeof(TextBox))
                 {
-                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                    results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
-                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-
-                    results += documentResult.content + Environment.NewLine;
-
-                    if (analyzeNamedEntities)
-                    {
-                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                        results += "============== Named Entities ==============";
-                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-
-                        var namedEntities = OpenNLP.APIOpenNLP.FindNames(documentResult.content);
-                        var dateListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<date>"), (Utils.AllIndexesOf(namedEntities, "</date>")));
-                        var personListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<person>"), (Utils.AllIndexesOf(namedEntities, "</person>")));
-                        var timeListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<time>"), (Utils.AllIndexesOf(namedEntities, "</time>")));
-                        var organizationListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<organization>"), (Utils.AllIndexesOf(namedEntities, "</organization>")));
-
-                        results += dateListTupleIndexes.Count > 0 ? "Dates: " : "";
-                        foreach (var tuple in dateListTupleIndexes)
-                            results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != dateListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
-
-                        results += personListTupleIndexes.Count > 0 ? "People: " : "";
-                        foreach (var tuple in personListTupleIndexes)
-                            results += namedEntities.Substring(tuple.Item1 + 8, (tuple.Item2 - 8) - tuple.Item1) + (tuple != personListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
-
-                        results += timeListTupleIndexes.Count > 0 ? "Time: " : "";
-                        foreach (var tuple in timeListTupleIndexes)
-                            results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != timeListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
-
-                        results += organizationListTupleIndexes.Count > 0 ? "Organizations: " : "";
-                        foreach (var tuple in organizationListTupleIndexes)
-                            results += namedEntities.Substring(tuple.Item1 + 14, (tuple.Item2 - 14) - tuple.Item1) + (tuple != organizationListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
-
-                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                        results += "============== END Named Entities ==============";
-                        results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                    }
-
-                    results += Environment.NewLine;
-
-                    if (documentResult.topWords.Count > 0)
-                    {
-                        results += "Most important words in document: ";
-                        for (int iWordIdx = 0; iWordIdx < documentResult.topWords.Count; iWordIdx++)
-                        {
-                            results += documentResult.topWords[iWordIdx] + " ";
-
-                            if (iWordIdx != 4)
-                                results += ", ";
-                            else
-                                results += ".";
-                        }
-                    }
-
-                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-                    results += "========================================================= END ==============================================================";
-                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
-
-                    iDocumentIdx++;
+                    resultsStackPanel.Children.Remove(control);
+                    break;
                 }
             }
 
@@ -126,6 +77,75 @@ namespace NLPWebScraper
 
             resultsStackPanel.Children.Add(textbox);
             spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        private void ConcatenateDataForPrint(DynamicallyScrapedWebsite scrapedWebsite, ref string results) 
+        {
+            int iDocumentIdx = 0;
+            foreach (var documentResult in scrapedWebsite.scrapingResults)
+            {
+                results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
+                results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+
+                results += documentResult.content + Environment.NewLine;
+                results += "Summary: " + documentResult.contentSummary + Environment.NewLine;
+
+                if (analyzeNamedEntities)
+                {
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    results += "============== Named Entities ==============";
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+
+                    var namedEntities = OpenNLP.APIOpenNLP.FindNames(documentResult.content);
+                    var dateListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<date>"), (Utils.AllIndexesOf(namedEntities, "</date>")));
+                    var personListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<person>"), (Utils.AllIndexesOf(namedEntities, "</person>")));
+                    var timeListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<time>"), (Utils.AllIndexesOf(namedEntities, "</time>")));
+                    var organizationListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<organization>"), (Utils.AllIndexesOf(namedEntities, "</organization>")));
+
+                    results += dateListTupleIndexes.Count > 0 ? "Dates: " : "";
+                    foreach (var tuple in dateListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != dateListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += personListTupleIndexes.Count > 0 ? "People: " : "";
+                    foreach (var tuple in personListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 8, (tuple.Item2 - 8) - tuple.Item1) + (tuple != personListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += timeListTupleIndexes.Count > 0 ? "Time: " : "";
+                    foreach (var tuple in timeListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 6, (tuple.Item2 - 6) - tuple.Item1) + (tuple != timeListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += organizationListTupleIndexes.Count > 0 ? "Organizations: " : "";
+                    foreach (var tuple in organizationListTupleIndexes)
+                        results += namedEntities.Substring(tuple.Item1 + 14, (tuple.Item2 - 14) - tuple.Item1) + (tuple != organizationListTupleIndexes.Last() ? ", " : "." + Environment.NewLine);
+
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    results += "============== END Named Entities ==============";
+                    results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                }
+
+                results += Environment.NewLine;
+
+                if (documentResult.topWords.Count > 0)
+                {
+                    results += "Most important words in document: ";
+                    for (int iWordIdx = 0; iWordIdx < documentResult.topWords.Count; iWordIdx++)
+                    {
+                        results += documentResult.topWords[iWordIdx] + " ";
+
+                        if (iWordIdx != 4)
+                            results += ", ";
+                        else
+                            results += ".";
+                    }
+                }
+
+                results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                results += "========================================================= END ==============================================================";
+                results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+
+                iDocumentIdx++;
+            }
         }
 
         private async void StaticScraping()
@@ -256,6 +276,146 @@ namespace NLPWebScraper
             }
             else
                 StaticScraping();
+        }
+
+        private void SummarizeEvent(object sender, RoutedEventArgs e)
+        {
+            spinnerControl.Visibility = System.Windows.Visibility.Visible;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Word2VecWrapper();
+            });
+        }
+
+        private void Word2VecWrapper()
+        {
+            var distance = new Distance("googleWord2Vec.bin");
+
+            for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
+            {
+                DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
+                if (scrapedWebsite == null)
+                    continue;
+
+                Dictionary<string, float[]> word2VecCache = new Dictionary<string, float[]>();
+                foreach (var scrapingResult in scrapedWebsite.scrapingResults)
+                {
+                    List<List<float>> documentMatrix = new List<List<float>>();
+
+                    for (int sentenceOneIdx = 0; sentenceOneIdx < scrapingResult.sentencesWords.Count; sentenceOneIdx++)
+                    {
+                        documentMatrix.Add(new List<float>());
+                        for (int sentenceTwoIdx = 0; sentenceTwoIdx < scrapingResult.sentencesWords.Count; sentenceTwoIdx++)
+                        {
+                            if (sentenceOneIdx == sentenceTwoIdx)
+                            {
+                                documentMatrix[sentenceOneIdx].Add(new float());
+                                documentMatrix[sentenceOneIdx][sentenceTwoIdx] = 0.0f;
+                                continue;
+                            }
+
+                            string[] sentenceOne = scrapingResult.sentencesWords[sentenceOneIdx].ToArray();
+                            string[] sentenceTwo = scrapingResult.sentencesWords[sentenceTwoIdx].ToArray();
+
+                            float[] sumSentenceOne = new float[300];
+                            Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
+                            float[] sumSentenceTwo = new float[300];
+                            Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
+
+                            foreach (var word in sentenceOne)
+                            {
+                                float[] currentWordVec;
+                                if (word2VecCache.ContainsKey(word))
+                                {
+                                    currentWordVec = word2VecCache[word];
+                                }
+                                else
+                                {
+                                    currentWordVec = distance.GetVecForWord(word);
+                                    word2VecCache[word] = currentWordVec;
+                                }
+
+
+                                if (currentWordVec.Length == 0)
+                                    continue;
+
+                                for (int i = 0; i < 300; i++)
+                                    sumSentenceOne[i] += currentWordVec[i];
+                            }
+
+                            foreach (var word in sentenceTwo)
+                            {
+                                float[] currentWordVec;
+                                if (word2VecCache.ContainsKey(word))
+                                {
+                                    currentWordVec = word2VecCache[word];
+                                }
+                                else
+                                {
+                                    currentWordVec = distance.GetVecForWord(word);
+                                    word2VecCache[word] = currentWordVec;
+                                }
+
+
+                                if (currentWordVec.Length == 0)
+                                    continue;
+
+                                for (int i = 0; i < 300; i++)
+                                    sumSentenceTwo[i] += currentWordVec[i];
+                            }
+
+                            float ratioOne = 1.0f / sumSentenceOne.Sum();
+                            sumSentenceOne = sumSentenceOne.Select(o => o * ratioOne).ToList().ToArray();
+                            float ratioTwo = 1.0f / sumSentenceTwo.Sum();
+                            sumSentenceTwo = sumSentenceTwo.Select(o => o * ratioTwo).ToList().ToArray();
+
+                            documentMatrix[sentenceOneIdx].Add(new float());
+                            documentMatrix[sentenceOneIdx][sentenceTwoIdx] = Utils.CalculateCosineSimilarity(sumSentenceOne, sumSentenceTwo);
+                        }
+                    }
+
+                    for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
+                    {
+                        float ratio = 1.0f / documentMatrix[rowIdx].Sum();
+                        documentMatrix[rowIdx] = documentMatrix[rowIdx].Select(o => o * ratio).ToList();
+                    }
+
+                    // Convert the similarity matrix into an undirected weighted graph.
+                    UnDirectedGraph<int> documentGraph = new UnDirectedGraph<int>();
+                    for (int sentenceOneIdx = 0; sentenceOneIdx < scrapingResult.sentencesWords.Count; sentenceOneIdx++)
+                    {
+                        for (int sentenceTwoIdx = 0; sentenceTwoIdx < scrapingResult.sentencesWords.Count; sentenceTwoIdx++)
+                        {
+                            if (sentenceOneIdx == sentenceTwoIdx)
+                                continue;
+
+                            documentGraph.AddEdge(sentenceOneIdx, sentenceTwoIdx, documentMatrix[sentenceOneIdx][sentenceTwoIdx]);
+                        }
+                    }
+
+                    for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
+                        documentMatrix[rowIdx].RemoveAll(o => o == 0.0f);
+
+                    // TextRank algorithm for sentences in documents.
+                    var rankedDictionary = new PageRank<string>().Rank(documentGraph);
+                    var topSentencesIndexes = rankedDictionary.ToList().OrderByDescending(sentence => sentence.Key).Take(5).ToList();
+
+                    foreach (var topSentencesIdx in topSentencesIndexes)
+                    {
+                        scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx.Key].Aggregate((i,j) => i + " " + j);
+                    }
+                }
+            }
+
+            string results = string.Empty;
+            for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
+            {
+                DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
+                if (scrapedWebsite == null)
+                    continue;
+                ConcatenateDataForPrint(scrapedWebsite, ref results);
+            }
+            PrintDataToGUI(results);
         }
 
         private void UpdateTextBoxWithStatus(int numberOfPagesSoFar, int numberOfPagesInQueue, int numberOfAdequatePagesFound)

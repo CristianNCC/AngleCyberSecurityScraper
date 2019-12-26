@@ -143,6 +143,14 @@
       <Project>{b70185df-81fd-4417-914f-7c90e65e7d9f}</Project>
       <Name>OpenNLP</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PageRank\PageRank.csproj">
+      <Project>{309fdccf-c71c-4580-a6ad-44a692d89e6c}</Project>
+      <Name>PageRank</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Word2Vec.Net\Word2Vec.Net.csproj">
+      <Project>{FEFCA2DC-137B-4EEE-A779-0194BDFEBE1F}</Project>
+      <Name>Word2Vec.Net</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.7\analyzers\dotnet\cs\Microsoft.CodeAnalysis.VersionCheckAnalyzer.resources.dll" />

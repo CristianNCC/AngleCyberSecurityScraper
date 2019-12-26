@@ -58,5 +58,25 @@ namespace NLPWebScraper
 
             return Math.Abs((element.Item2 - toCompare.Item2) * 0.2) + Math.Abs((element.Item3 - toCompare.Item3) * 0.8) < epsilon;
         }
+
+        public static float DotProduct(this float[] vec1, float[] vec2)
+        {
+            if (vec1 == null)
+                return 0;
+
+            if (vec2 == null)
+                return 0;
+
+            if (vec1.Length != vec2.Length)
+                return 0;
+
+            float tVal = 0;
+            for (int x = 0; x < vec1.Length; x++)
+            {
+                tVal += vec1[x] * vec2[x];
+            }
+
+            return tVal;
+        }
     }
 }
