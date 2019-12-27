@@ -11,15 +11,24 @@ namespace NLPWebScraper
     public static class Word2VecManager
     {
         public delegate void UpdateGUIMethod();
-        private static UpdateGUIMethod callbackToGUI;
+        private static UpdateGUIMethod callbackToGUI = null;
 
         private static Dictionary<string, float[]> word2VecCache = new Dictionary<string, float[]>();
-        private static Distance word2VecDistance = new Distance("googleWord2Vec.bin");
+        private static Distance word2VecDistance = null;
 
         public static UpdateGUIMethod CallbackToGUI { get => callbackToGUI; set => callbackToGUI = value; }
 
+        #region Private methods
+        private static void LoadUpWord2VecDatabase()
+        {
+            if (word2VecDistance == null)
+                word2VecDistance = new Distance("googleWord2Vec.bin");
+        }
+
         private static void ComputeSentenceVector(string[] sentence, ref float[] sumSentence)
         {
+            LoadUpWord2VecDatabase();
+
             for (int wordIdx = 0; wordIdx < sentence.Length; wordIdx++)
             {
                 string word = sentence[wordIdx];
@@ -42,11 +51,21 @@ namespace NLPWebScraper
                     sumSentence[i] += currentWordVec[i];
             }
         }
+        #endregion
+
+        #region Public methods
+        public static float[] GetVecForWord(string word)
+        {
+            LoadUpWord2VecDatabase();
+            return word2VecDistance.GetVecForWord(word);
+        }
 
         public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites)
         {
             if (scrapedWebsites == null)
                 return;
+
+            LoadUpWord2VecDatabase();
 
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
@@ -149,8 +168,10 @@ namespace NLPWebScraper
             // We are not on the main (GUI) thread so we need to update the GUI with an invoke.
             Application.Current.Dispatcher.Invoke(() =>
             {
-                CallbackToGUI();
+                if (callbackToGUI != null)
+                    callbackToGUI();
             });
         }
+        #endregion
     }
 }
