@@ -47,10 +47,8 @@ namespace Word2Vec.Net
                 }
                 if (b == Words) b = -1;
                 bi[a] = b;
-                Console.Write("\nWord: {0}  Position in vocabulary: {1}\n", st[a], bi[a]);
                 if (b == -1)
                 {
-                    Console.Write("Out of dictionary word!\n");
                     break;
                 }
             }
@@ -118,10 +116,8 @@ namespace Word2Vec.Net
                 }
                 if (b == Words) b = -1;
                 bi[a] = b;
-                Console.Write("\nWord: {0}  Position in vocabulary: {1}\n", st[a], bi[a]);
                 if (b == -1)
                 {
-                    Console.Write("Out of dictionary word!\n");
                     break;
                 }
             }
