@@ -5,11 +5,19 @@ using PageRank.Rank;
 using Word2Vec.Net;
 using PageRank.Graph;
 using System.Windows;
+using System.IO;
 
 namespace NLPWebScraper
 {
     public static class Word2VecManager
     {
+        #region Constants
+        private const string word2VecDatabasePath = "googleWord2Vec.bin";
+        private const int maximumSummarySize = 200;
+        private const int databaseFeatureSize = 300;
+        #endregion
+
+        #region Members
         public delegate void UpdateGUIMethod();
         private static UpdateGUIMethod callbackToGUI = null;
 
@@ -17,17 +25,20 @@ namespace NLPWebScraper
         private static Distance word2VecDistance = null;
 
         public static UpdateGUIMethod CallbackToGUI { get => callbackToGUI; set => callbackToGUI = value; }
+        #endregion
 
         #region Private methods
         private static void LoadUpWord2VecDatabase()
         {
-            if (word2VecDistance == null)
-                word2VecDistance = new Distance("googleWord2Vec.bin");
+            if (word2VecDistance == null && File.Exists(word2VecDatabasePath))
+                word2VecDistance = new Distance(word2VecDatabasePath);
         }
 
         private static void ComputeSentenceVector(string[] sentence, ref float[] sumSentence)
         {
             LoadUpWord2VecDatabase();
+            if (word2VecDistance == null)
+                return;
 
             for (int wordIdx = 0; wordIdx < sentence.Length; wordIdx++)
             {
@@ -47,7 +58,7 @@ namespace NLPWebScraper
                 if (currentWordVec.Length == 0)
                     continue;
 
-                for (int i = 0; i < 300; i++)
+                for (int i = 0; i < databaseFeatureSize; i++)
                     sumSentence[i] += currentWordVec[i];
             }
         }
@@ -57,6 +68,9 @@ namespace NLPWebScraper
         public static float[] GetVecForWord(string word)
         {
             LoadUpWord2VecDatabase();
+            if (word2VecDistance == null)
+                return Array.Empty<float>();
+
             return word2VecDistance.GetVecForWord(word);
         }
 
@@ -66,6 +80,8 @@ namespace NLPWebScraper
                 return;
 
             LoadUpWord2VecDatabase();
+            if (word2VecDistance == null)
+                return;
 
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
             {
@@ -92,9 +108,9 @@ namespace NLPWebScraper
                             string[] sentenceOne = scrapingResult.sentencesWords[sentenceOneIdx].ToArray();
                             string[] sentenceTwo = scrapingResult.sentencesWords[sentenceTwoIdx].ToArray();
 
-                            float[] sumSentenceOne = new float[300];
+                            float[] sumSentenceOne = new float[databaseFeatureSize];
                             Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
-                            float[] sumSentenceTwo = new float[300];
+                            float[] sumSentenceTwo = new float[databaseFeatureSize];
                             Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
 
                             ComputeSentenceVector(sentenceOne, ref sumSentenceOne);
@@ -160,7 +176,7 @@ namespace NLPWebScraper
                         scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx].Aggregate((i, j) => i + " " + j);
                         wordCount += scrapingResult.sentencesWords[topSentencesIdx].Count;
 
-                        if (wordCount > 200)
+                        if (wordCount > maximumSummarySize)
                             break;
                     }
                 }
