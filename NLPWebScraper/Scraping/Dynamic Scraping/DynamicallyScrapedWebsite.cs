@@ -89,6 +89,9 @@ namespace NLPWebScraper
 
             // Apply NLP techniques for filtering.
             ApplyNLPFiltering();
+
+            // Compute the top words for this selection or articles.
+            ComputeTopWords();
         }
 
         #region Template extraction helper methods
@@ -381,6 +384,23 @@ namespace NLPWebScraper
             }
         }
 
+        private void ComputeTopWords()
+        {
+            var documentsTFIDF = Utils.Transform(scrapingResults.Select(result => result.sentencesWords).ToList());
+            for (int iDocIdx = 0; iDocIdx < documentsTFIDF.Count; iDocIdx++)
+            {
+                if (scrapingResults[iDocIdx].isValid)
+                    continue;
+
+                var documentVocabulary = documentsTFIDF[iDocIdx].ToList();
+                documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
+                documentVocabulary.Reverse();
+                var topFiveWordsDictionary = documentVocabulary.Take(10).ToList();
+
+                scrapingResults[iDocIdx].topWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
+            }
+        }
+
         private void ApplyNLPFiltering()
         {
             // Aggregate all text content.
@@ -527,7 +547,8 @@ namespace NLPWebScraper
             // Check if we already have relevant information in the database.
             foreach (var databaseEntry in extractionDatabase)
             {
-                if (databaseEntry.topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() != 0)
+                if (new Uri(databaseEntry.pageUrl).Host == new Uri(databaseEntry.pageUrl).Host && 
+                    databaseEntry.topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() != 0)
                 {
                     if (bestCS.Contains(databaseEntry.pageUrl))
                         continue;
@@ -577,21 +598,16 @@ namespace NLPWebScraper
                     // Apply NLP techniques for filtering.
                     ApplyNLPFiltering();
 
-                    var documentsTFIDF = Utils.Transform(scrapingResults.Select(result => result.sentencesWords).ToList());
+                    // Compute the top words for this selection or articles.
+                    ComputeTopWords();
 
-                    for (int iDocIdx = 0; iDocIdx < documentsTFIDF.Count; iDocIdx++)
+                    queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
+                    for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
                     {
                         if (scrapingResults[iDocIdx].isValid)
                             continue;
 
-                        var documentVocabulary = documentsTFIDF[iDocIdx].ToList();
-                        documentVocabulary.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
-                        documentVocabulary.Reverse();
-                        var topFiveWordsDictionary = documentVocabulary.Take(10).ToList();
-
-                        scrapingResults[iDocIdx].topWords = topFiveWordsDictionary.Select(wordDictionary => wordDictionary.Key).ToList();
-                        queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
-
+                        // Add any new found data to the database of page-topWords entries. It may be useful in the future.
                         extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topWords));
 
                         if (scrapingResults[iDocIdx].topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
@@ -600,6 +616,8 @@ namespace NLPWebScraper
                         }
                         else
                         {
+                            // If we find a valid page in regards to our query, any outgoing pages from this one page 
+                            // should have an increased priority because they are related to it.
                             scrapingResults[iDocIdx].isValid = true;
                             foreach(var linkToBeProcessed in linksToProcess)
                             {
@@ -610,6 +628,7 @@ namespace NLPWebScraper
                         }
                     }
 
+                    // Remove all invalid pages and move on.
                     for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
                     {
                         if (!scrapingResults[iDocIdx].isValid)

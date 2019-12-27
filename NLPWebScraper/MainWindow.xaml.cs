@@ -88,7 +88,7 @@ namespace NLPWebScraper
                 results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
-                results += documentResult.content + Environment.NewLine;
+                results += documentResult.content + Environment.NewLine + Environment.NewLine;
                 results += "Summary: " + documentResult.contentSummary + Environment.NewLine;
 
                 if (analyzeNamedEntities)
@@ -322,9 +322,11 @@ namespace NLPWebScraper
                             float[] sumSentenceTwo = new float[300];
                             Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
 
-                            foreach (var word in sentenceOne)
+                            for (int wordIdx = 0; wordIdx < sentenceOne.Length; wordIdx++)
                             {
+                                string word = sentenceOne[wordIdx];
                                 float[] currentWordVec;
+
                                 if (word2VecCache.ContainsKey(word))
                                 {
                                     currentWordVec = word2VecCache[word];
@@ -334,7 +336,6 @@ namespace NLPWebScraper
                                     currentWordVec = distance.GetVecForWord(word);
                                     word2VecCache[word] = currentWordVec;
                                 }
-
 
                                 if (currentWordVec.Length == 0)
                                     continue;
@@ -343,9 +344,11 @@ namespace NLPWebScraper
                                     sumSentenceOne[i] += currentWordVec[i];
                             }
 
-                            foreach (var word in sentenceTwo)
+                            for (int wordIdx = 0; wordIdx < sentenceTwo.Length; wordIdx++)
                             {
+                                string word = sentenceTwo[wordIdx];
                                 float[] currentWordVec;
+
                                 if (word2VecCache.ContainsKey(word))
                                 {
                                     currentWordVec = word2VecCache[word];
@@ -355,7 +358,6 @@ namespace NLPWebScraper
                                     currentWordVec = distance.GetVecForWord(word);
                                     word2VecCache[word] = currentWordVec;
                                 }
-
 
                                 if (currentWordVec.Length == 0)
                                     continue;
@@ -374,6 +376,7 @@ namespace NLPWebScraper
                         }
                     }
 
+                    // Normalize every row in the matrix.
                     for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
                     {
                         float ratio = 1.0f / documentMatrix[rowIdx].Sum();
@@ -393,18 +396,38 @@ namespace NLPWebScraper
                         }
                     }
 
+                    // Remove the diagonal which only contains zeroes.
                     for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
                         documentMatrix[rowIdx].RemoveAll(o => o == 0.0f);
 
                     // TextRank algorithm for sentences in documents.
-                    var rankedDictionary = new PageRank<string>().Rank(documentGraph);
-                    var topSentencesIndexes = rankedDictionary.ToList().OrderByDescending(sentence => sentence.Key).Take(5).ToList();
+                    var rankedDictionary = new PageRank<string>().Rank(documentGraph, 1.0f);
 
-                    topSentencesIndexes = topSentencesIndexes.OrderBy(sentence => sentence.Key).ToList();
+                    // In PageRank, we're looking for higher scores, so we sort in a descending manner.
+                    var rankedSentencesList = rankedDictionary.ToList().OrderByDescending(sentence => sentence.Value).ToList();
 
+                    List<int> topSentencesIndexes = new List<int>();
+                    foreach (var sentencePair in rankedSentencesList)
+                    {
+                        if (scrapingResult.sentencesWords[sentencePair.Key].Select(word => word.ToLower()).Intersect(
+                            scrapingResult.topWords, StringComparer.InvariantCultureIgnoreCase).Any())
+                        {
+                            topSentencesIndexes.Add(sentencePair.Key);
+                        }
+                    }
+
+                    // Sort the indexes in ascending order so the summary makes more sense.
+                    topSentencesIndexes = topSentencesIndexes.OrderBy(sentence => sentence).ToList();
+
+                    int wordCount = 0;
+                    // Fill out the summary for each result.
                     foreach (var topSentencesIdx in topSentencesIndexes)
                     {
-                        scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx.Key].Aggregate((i,j) => i + " " + j);
+                        scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx].Aggregate((i, j) => i + " " + j);
+                        wordCount += scrapingResult.sentencesWords[topSentencesIdx].Count;
+
+                        if (wordCount > 200)
+                            break;
                     }
                 }
             }
