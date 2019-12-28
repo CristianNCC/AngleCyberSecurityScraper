@@ -31,11 +31,12 @@ namespace NLPWebScraper
         private const int maximalSubdigraphSize = 4;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
+        private const string databaseName = "siteDatabase.json";
 
         public DynamicallyScrapedWebsite(string siteUrl, UpdateGUIMethod callback) : base(siteUrl) 
         {
             callbackToGUI = callback;
-            DeserializeSiteInformation("siteDatabase.json");
+            DeserializeSiteInformation(databaseName);
         }
         #endregion
 
@@ -418,6 +419,7 @@ namespace NLPWebScraper
                 foreach (var sentence in sentences)
                 {
                     var filteredSentence = sentence.Replace("\n", "");
+                    filteredSentence = filteredSentence.Replace("\t", "");
                     filteredSentences.Add(filteredSentence);
 
                     sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
@@ -434,6 +436,37 @@ namespace NLPWebScraper
                         indexesToRemove.Add(sentenceIndex);
                 }
 
+                bool wordRemovalConverged = true;
+                do
+                {
+                    wordRemovalConverged = true;
+                    for (int sentenceIndex = 0; sentenceIndex < sentencesWords.Count; sentenceIndex++)
+                    {
+                        List<bool> wordsFoundInSentence = new List<bool>();
+                        for (int wordIndex = 0; wordIndex < sentencesWords[sentenceIndex].Count; wordIndex++)
+                        {
+                            var vec = Word2VecManager.GetVecForWord(sentencesWords[sentenceIndex][wordIndex]);
+                            if (vec.Length == 0)
+                                wordsFoundInSentence.Add(false);
+                            else
+                                wordsFoundInSentence.Add(true);
+                        }
+
+                        for (int wordIndex = 1; wordIndex < sentencesWords[sentenceIndex].Count - 1; wordIndex++)
+                        {
+                            if (!wordsFoundInSentence[wordIndex - 1] && !wordsFoundInSentence[wordIndex] && !wordsFoundInSentence[wordIndex + 1])
+                            {
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex);
+                                wordsFoundInSentence.RemoveAt(wordIndex);
+                                wordIndex--;
+
+                                wordRemovalConverged = false;
+                            }
+                        }
+                    }
+                } while (!wordRemovalConverged);
+
                 documentResult.content = string.Empty;
                 for (int index = 0; index < sentencesWords.Count; index++)
                 {
@@ -443,7 +476,7 @@ namespace NLPWebScraper
                     documentResult.sentencesWords.Add(sentencesWords[index]);
                     documentResult.posSentences.Add(posSentences[index]);
 
-                    documentResult.content += filteredSentences[index]; //+ Environment.NewLine;
+                    documentResult.content += sentencesWords[index].Aggregate((i, j) => i + " " + j);
                 }
             }
         }

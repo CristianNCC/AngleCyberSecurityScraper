@@ -71,7 +71,18 @@ namespace NLPWebScraper
             if (word2VecDistance == null)
                 return Array.Empty<float>();
 
-            return word2VecDistance.GetVecForWord(word);
+            float[] vec = new float[300];
+            if (word2VecCache.ContainsKey(word))
+            {
+                vec = word2VecCache[word];
+            }
+            else
+            {
+                vec = word2VecDistance.GetVecForWord(word);
+                word2VecCache[word] = vec;
+            }
+
+            return vec;
         }
 
         public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites)
@@ -173,7 +184,7 @@ namespace NLPWebScraper
                     // Fill out the summary for each result.
                     foreach (var topSentencesIdx in topSentencesIndexes)
                     {
-                        scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx].Aggregate((i, j) => i + " " + j);
+                        scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx].Aggregate((i, j) => i + " " + j) + Environment.NewLine;
                         wordCount += scrapingResult.sentencesWords[topSentencesIdx].Count;
 
                         if (wordCount > maximumSummarySize)
