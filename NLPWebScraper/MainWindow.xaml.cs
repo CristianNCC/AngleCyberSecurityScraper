@@ -86,7 +86,7 @@ namespace NLPWebScraper
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
                 results += documentResult.content + Environment.NewLine + Environment.NewLine;
-                results += "Summary: " + documentResult.contentSummary + Environment.NewLine;
+                results += "Summary: " + Environment.NewLine + documentResult.contentSummary + Environment.NewLine;
 
                 if (analyzeNamedEntities)
                 {

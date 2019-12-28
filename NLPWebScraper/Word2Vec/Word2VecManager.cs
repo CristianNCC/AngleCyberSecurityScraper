@@ -102,6 +102,9 @@ namespace NLPWebScraper
 
                 foreach (var scrapingResult in scrapedWebsite.scrapingResults)
                 {
+                    if (scrapingResult.sentencesWords.Count == 0)
+                        continue;
+
                     List<List<float>> documentMatrix = new List<List<float>>();
 
                     for (int sentenceOneIdx = 0; sentenceOneIdx < scrapingResult.sentencesWords.Count; sentenceOneIdx++)

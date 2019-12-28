@@ -29,6 +29,7 @@ namespace NLPWebScraper
         private const int maxConnectionsCount = 3000;
         private const int maximalWordCount = 20;
         private const int maximalSubdigraphSize = 4;
+        private const int minimumSentenceSize = 5;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
         private const string databaseName = "siteDatabase.json";
@@ -198,7 +199,7 @@ namespace NLPWebScraper
                 bool foundSubdigraph = false;
 
                 // If the number of connections grows to be too large, exit.
-                if (connections.Count > maxConnectionsCount)
+                if (connections.Count > maxConnectionsCount && testedGraphs.Count > 0)
                     break;
 
                 foreach (var iterationSubdigraph in allCompleteSubdigraphs)
@@ -456,10 +457,18 @@ namespace NLPWebScraper
                         {
                             if (!wordsFoundInSentence[wordIndex - 1] && !wordsFoundInSentence[wordIndex] && !wordsFoundInSentence[wordIndex + 1])
                             {
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex + 1);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex + 1);
+                                wordsFoundInSentence.RemoveAt(wordIndex + 1);
+
                                 sentencesWords[sentenceIndex].RemoveAt(wordIndex);
                                 posSentences[sentenceIndex].RemoveAt(wordIndex);
                                 wordsFoundInSentence.RemoveAt(wordIndex);
                                 wordIndex--;
+
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex);
+                                wordsFoundInSentence.RemoveAt(wordIndex);
 
                                 wordRemovalConverged = false;
                             }
@@ -471,6 +480,9 @@ namespace NLPWebScraper
                 for (int index = 0; index < sentencesWords.Count; index++)
                 {
                     if (indexesToRemove.Contains(index))
+                        continue;
+
+                    if (sentencesWords[index].Count < minimumSentenceSize)
                         continue;
 
                     documentResult.sentencesWords.Add(sentencesWords[index]);
