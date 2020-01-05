@@ -747,6 +747,10 @@ namespace NLPWebScraper
                         continue;
                 }
 
+                // Stop if we've reached the end of the queue.
+                if (linksToProcess.Count == 0)
+                    break;
+
                 // Pop the first element out of the set.
                 string link = linksToProcess.First().link;
                 linksToProcess.Remove(linksToProcess.First());
@@ -780,12 +784,17 @@ namespace NLPWebScraper
                 if (averageStandardDeviation < 0 || averageStandardDeviation > thresholdStandardDevianceGathering)
                     continue;
 
+                // Add outgoing links to the set of links to be processed.
+                linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
+
+                // Before we do all the NLP and Word2Vec processing, we can do a shallow search of the query terms.
+                bool shallowSearch = document.All.Select(element => element.TextContent).ToList().Any(content => queryTerms.Any(queryTerm => content.Contains(queryTerm)));
+                if (!shallowSearch)
+                    continue;
+
                 // Add the links and documents.
                 bestCS.Add(link);
                 webDocuments.Add(document);
-
-                // Add outgoing links to the set of links to be processed.
-                linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
             }
         }
         #endregion
