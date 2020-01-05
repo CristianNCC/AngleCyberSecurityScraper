@@ -66,7 +66,7 @@
                 </GroupBox>
 
                 <GroupBox Grid.Row="1" Name="scrapingStatusGroupbox" Header="Scraping status" Grid.Column="0" Grid.ColumnSpan="4" Margin="5" IsEnabled="False">
-                <TextBox Grid.Column="1" Grid.ColumnSpan="3" Name="scrapingStatusTextbox" Width="Auto" Height="Auto" Margin="5 0 5 0" IsReadOnly="True" BorderThickness="0"/>
+                <TextBox Grid.Column="1" Grid.ColumnSpan="3" Name="scrapingStatusTextbox" Width="Auto" Height="Auto" Margin="5 0 5 0" IsReadOnly="True" VerticalScrollBarVisibility="Visible" BorderThickness="0"/>
                 </GroupBox>
 
                 <CheckBox Grid.Row="2" x:Name="scrapeOnlyForTemplateCheckbox" Content="Scrape only for template" IsChecked="True" VerticalAlignment="Center" Margin="5" Click="ScrapeForTemplateIsChecked"/>

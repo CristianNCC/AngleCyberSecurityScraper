@@ -12,7 +12,7 @@ namespace NLPWebScraper
     public static class Word2VecManager
     {
         #region Constants
-        private const string word2VecDatabasePath = "googleWord2Vec.bin";
+        private const string word2VecDatabasePath = "../Files/googleWord2Vec.bin";
         private const int databaseFeatureSize = 300;
         #endregion
 

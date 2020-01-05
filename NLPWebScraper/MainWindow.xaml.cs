@@ -17,7 +17,7 @@ namespace NLPWebScraper
 {
     public partial class MainWindow : Window
     {
-        private string pathToResults = "results.txt";
+        private string pathToResults = "../Files/results.txt";
 
         public bool analyzeNamedEntities = true;
         public int numberOfPages;
@@ -25,7 +25,7 @@ namespace NLPWebScraper
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
 
         // If scraping for information is false, then the scraping will stop at finding the template.
-        public bool scrapeOnlyForTemplate = false;
+        public bool scrapeOnlyForTemplate = true;
 
         // List of dictionaries where Key=Term and list of tuples <url, articleTitle, titlePolarity>
         public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = new List<Dictionary<string, List<Tuple<string, string, int>>>>();

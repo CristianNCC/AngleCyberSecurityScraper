@@ -34,7 +34,7 @@ namespace NLPWebScraper
         private const int databaseUpdateCount = 100;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
-        private const string databaseName = "siteDatabase.json";
+        private const string databaseName = "../Files/siteDatabase.json";
 
         public int MaximalSubdigraphSize { get; set; } = 4;
         public int MaxConnectionsCount { get; set; } = 3000;
@@ -55,7 +55,7 @@ namespace NLPWebScraper
         public void SerializeSiteInformation()
         {
             string output = JsonConvert.SerializeObject(extractionDatabase);
-            File.WriteAllText("siteDatabase.json", output);
+            File.WriteAllText(databaseName, output);
         }
 
         public void DeserializeSiteInformation(string jsonPath)
@@ -63,7 +63,7 @@ namespace NLPWebScraper
             if (!File.Exists(jsonPath))
                 return;
 
-            string output = File.ReadAllText("siteDatabase.json");
+            string output = File.ReadAllText(databaseName);
 
             if (string.IsNullOrEmpty(output))
                 return;
