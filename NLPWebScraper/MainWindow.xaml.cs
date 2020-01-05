@@ -11,11 +11,14 @@ using System.Windows.Input;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace NLPWebScraper
 {
     public partial class MainWindow : Window
     {
+        private string pathToResults = "results.txt";
+
         public bool analyzeNamedEntities = true;
         public int numberOfPages;
         public List<string> queryTerms;
@@ -50,30 +53,26 @@ namespace NLPWebScraper
                 {
                     await Task.Run(() => scrapedWebsite.DynamicScrapingForInformationGathering(queryTerms, numberOfPages)).ConfigureAwait(true);
                 }
-                ConcatenateDataForPrint(scrapedWebsite, ref results);
-            }
-            PrintDataToGUI(results);
-        }
 
-        private void PrintDataToGUI(string results)
-        {
-            foreach (Control control in resultsStackPanel.Children)
-            {
-                if (control.GetType() == typeof(TextBox))
+                bool castSucceded = int.TryParse(summarySizeTextbox.Text, out int summarySize);
+                if (!castSucceded)
+                    return;
+
+                if (summarySize > 0)
                 {
-                    resultsStackPanel.Children.Remove(control);
-                    break;
+                    UpdateTextBoxWithStatus("Summarizing the text using the TextRank algorithm...");
+                    await Task.Run(() =>
+                    {
+                        Word2VecManager.CallbackToGUI = UpdateResults;
+                        Word2VecManager.RunWord2Vec(scrapedWebsites, summarySize);
+                    }).ConfigureAwait(true);
                 }
+
+                UpdateTextBoxWithStatus("Writing the results to disk...");
+                ConcatenateDataForPrint(scrapedWebsite, ref results);
+                UpdateTextBoxWithStatus("Done writing the results to disk. The process is finished...");
+                spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
             }
-
-            TextBox textbox = new TextBox()
-            {
-                Text = results,
-                TextWrapping = TextWrapping.Wrap
-            };
-
-            resultsStackPanel.Children.Add(textbox);
-            spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private void ConcatenateDataForPrint(DynamicallyScrapedWebsite scrapedWebsite, ref string results) 
@@ -83,6 +82,7 @@ namespace NLPWebScraper
             {
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                 results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
+                results += "========================================================= Title: " + documentResult.title + "==============================================================";
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
                 results += documentResult.content + Environment.NewLine + Environment.NewLine;
@@ -181,8 +181,6 @@ namespace NLPWebScraper
                         }
                     };
 
-                    resultsStackPanel.Children.Add(termGroupBox);
-
                     List<Tuple<string, string, int>> sortedResults = termResults.OrderBy(result => result.Item3).ToList();
 
                     for (int iTermResult = 0; iTermResult < sortedResults.Count; iTermResult++)
@@ -256,11 +254,13 @@ namespace NLPWebScraper
         private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)
         {
             listTermToScrapeDictionary.Clear();
-            resultsStackPanel.Children.Clear();
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
 
-            bool castSucceded = int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
-            if (!castSucceded)
+            bool noPagesCast = int.TryParse(numberOfPagesTextBox.Text, out numberOfPages);
+            bool subdigraphSizeCast = int.TryParse(subdigraphSizeTextbox.Text, out int subdigraphSize);
+            bool maxConnectionsCast = int.TryParse(maxConnectionsTextbox.Text, out int maxConnections);
+            bool word2VecMaxCountCast = int.TryParse(word2VecCountToLoadTextbox.Text, out int word2VecMaxCount);
+            if (!noPagesCast || !subdigraphSizeCast || !maxConnectionsCast || !word2VecMaxCountCast)
                 return;
 
             queryTerms = queryTermsTextBox.Text.Split(';').ToList();
@@ -268,25 +268,14 @@ namespace NLPWebScraper
             if (dynamicScrapingCheckbox.IsChecked == true)
             {
                 scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
-                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, UpdateTextBoxWithStatus));
+                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, subdigraphSize, maxConnections, word2VecMaxCount, UpdateTextBoxWithStatus));
                 DynamicScraping();
             }
             else
                 StaticScraping();
         }
 
-        private void SummarizeEvent(object sender, RoutedEventArgs e)
-        {
-            spinnerControl.Visibility = System.Windows.Visibility.Visible;
-
-            Task.Run(() => 
-            {
-                Word2VecManager.CallbackToGUI = UpdateGUIText;
-                Word2VecManager.RunWord2Vec(scrapedWebsites);
-            });
-        }
-
-        private void UpdateGUIText()
+        private void UpdateResults()
         {
             string results = string.Empty;
             for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
@@ -296,12 +285,12 @@ namespace NLPWebScraper
                     continue;
                 ConcatenateDataForPrint(scrapedWebsite, ref results);
             }
-            PrintDataToGUI(results);
+            File.WriteAllText(pathToResults, results); 
         }
 
-        private void UpdateTextBoxWithStatus(int numberOfPagesSoFar, int numberOfPagesInQueue, int numberOfAdequatePagesFound)
+        private void UpdateTextBoxWithStatus(string textToPrint)
         {
-            scrapingStatusTextbox.Text = "Scraped: " + numberOfPagesSoFar + ".   Queue: " + numberOfPagesInQueue + ".   Found: " + numberOfAdequatePagesFound + ".";
+            scrapingStatusTextbox.Text += textToPrint + Environment.NewLine;
         }
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
@@ -324,6 +313,11 @@ namespace NLPWebScraper
         private void ScrapeForTemplateIsChecked(object sender, RoutedEventArgs e)
         {
             scrapeOnlyForTemplate = scrapeOnlyForTemplateCheckbox.IsChecked == true;
+
+            if (scrapeOnlyForTemplate)
+                queryTermsTextBox.IsEnabled = false;
+            else
+                queryTermsTextBox.IsEnabled = true;
         }
     }
 }

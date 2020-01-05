@@ -74,16 +74,16 @@ namespace Word2Vec.Net
         /// Basic class for analysis algorithms( distnace, analogy, commpute-accuracy)
         /// </summary>
         /// <param name="fileName"></param>
-        public Word2VecAnalysisBase(string fileName)
+        public Word2VecAnalysisBase(string fileName, int initSize)
         {
             file_name = fileName;           //bestw = new string[N];
             
            
             
-            InitVocub();
+            InitVocub(initSize);
         }
 
-        private void InitVocub()
+        private void InitVocub(int initSize)
         {
             using (FileStream f = File.Open(file_name, FileMode.Open, FileAccess.Read))
             {
@@ -94,7 +94,7 @@ namespace Word2Vec.Net
                 Size = f.ReadInt32();
  
                 // TODO: My system cannot handle any more.
-                Words = 1500000;
+                Words = initSize;
                 M = new float[Words * Size];
                 Vocab = new char[Words*max_w];
                 for (int b = 0; b < Words; b++)

@@ -12,7 +12,7 @@ namespace NLPWebScraper
     #region Dynamic scraping
     class DynamicallyScrapedWebsite : ScrapedWebsite
     {
-        public delegate void UpdateGUIMethod(int numberOfPagesSoFar, int numberOfPagesInQueue, int numberOfAdequatePagesFound);
+        public delegate void UpdateGUIMethod(string textToPrint);
 
         #region Members and constructor
         public HashSet<string> bestCS = new HashSet<string>();
@@ -21,21 +21,31 @@ namespace NLPWebScraper
         public List<DocumentScrapingResult> scrapingResults = new List<DocumentScrapingResult>();
         public HashSet<string> processedLinks = new HashSet<string>();
 
+        public int previousSerializationMoment = 0;
         public int pagesScrapedSoFar = 0;
         public UpdateGUIMethod callbackToGUI;
 
         public List<SiteTopWordsEntry> extractionDatabase = new List<SiteTopWordsEntry>();
 
-        private const int maxConnectionsCount = 3000;
+        public bool isLookingForTemplate = true;
+
         private const int maximalWordCount = 20;
-        private const int maximalSubdigraphSize = 4;
         private const int minimumSentenceSize = 5;
+        private const int databaseUpdateCount = 100;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
         private const string databaseName = "siteDatabase.json";
 
-        public DynamicallyScrapedWebsite(string siteUrl, UpdateGUIMethod callback) : base(siteUrl) 
+        public int MaximalSubdigraphSize { get; set; } = 4;
+        public int MaxConnectionsCount { get; set; } = 3000;
+
+        public int Word2VecMaxCount { get; set; } = 1500000;
+
+        public DynamicallyScrapedWebsite(string siteUrl, int subdigraphSize, int maxConnections, int word2VecMaxCount, UpdateGUIMethod callback) : base(siteUrl) 
         {
+            Word2VecMaxCount = word2VecMaxCount;
+            MaximalSubdigraphSize = subdigraphSize;
+            MaxConnectionsCount = maxConnections;
             callbackToGUI = callback;
             DeserializeSiteInformation(databaseName);
         }
@@ -64,7 +74,9 @@ namespace NLPWebScraper
 
         #region Template extraction
         public async Task DynamicScrapingForTemplateExtraction()
-        {  
+        {
+            isLookingForTemplate = true;
+
             var mainPageDocument = await GetDocumentFromLink(siteUrl).ConfigureAwait(true);
 
             // Get outgoing links from the main page.
@@ -76,6 +88,8 @@ namespace NLPWebScraper
 
             // Do different heuristics to optimize the processing of links.
             RefreshLinksHashSet(ref mainPageLinks);
+
+            UpdateGUIWithState("Looking for the best complete subdigraph...");
 
             // Get BestCSData, which is a tuple of the bestCS in links, the DOM for each page and the template frequency for the CS.
             await Task.Run(() => GetBestCompleteSubdigraph(mainPageLinks.Select(mainPageLink => mainPageLink.link).ToHashSet())).ConfigureAwait(true);
@@ -94,9 +108,20 @@ namespace NLPWebScraper
 
             // Compute the top words for this selection or articles.
             ComputeTopWords();
+
+            isLookingForTemplate = false;
         }
 
         #region Template extraction helper methods
+        private void UpdateGUIWithState(string stringToPrint)
+        {
+            // We are not on the main (GUI) thread so we need to update the GUI with an invoke.
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                callbackToGUI(stringToPrint);
+            });
+        }
+
         private async Task<IHtmlDocument> GetSubPageFromLink(string url)
         {
             IHtmlDocument webPage;
@@ -152,7 +177,7 @@ namespace NLPWebScraper
                     }
                 }
 
-                if (!allCompleteSubdigraphs.Any(cs => cs.SetEquals(newCS)) && newCS.Count >= maximalSubdigraphSize)
+                if (!allCompleteSubdigraphs.Any(cs => cs.SetEquals(newCS)) && newCS.Count >= MaximalSubdigraphSize)
                     allCompleteSubdigraphs.Add(newCS);
             }
 
@@ -199,12 +224,12 @@ namespace NLPWebScraper
                 bool foundSubdigraph = false;
 
                 // If the number of connections grows to be too large, exit.
-                if (connections.Count > maxConnectionsCount && testedGraphs.Count > 0)
+                if (connections.Count > MaxConnectionsCount && testedGraphs.Count > 0)
                     break;
 
                 foreach (var iterationSubdigraph in allCompleteSubdigraphs)
                 {
-                    if (iterationSubdigraph.Count >= maximalSubdigraphSize)
+                    if (iterationSubdigraph.Count >= MaximalSubdigraphSize)
                     {
                         // Found a good subdigraph, we can return;
                         bestCS = iterationSubdigraph;
@@ -230,6 +255,7 @@ namespace NLPWebScraper
                         double averageStandardDeviation = GetSimilarityBetweenTemplates(pagesFrequencyDictionaryList);
                         if (averageStandardDeviation > 0 && averageStandardDeviation < thresholdStandardDevianceTemplate)
                         {
+                            UpdateGUIWithState("Found subdigraph with deviation below required threshold (" + averageStandardDeviation.ToString() + ")...");
                             foundSubdigraph = true;
                             break;
                         }
@@ -258,6 +284,9 @@ namespace NLPWebScraper
             {
                 // If no graph is perfectly suitable according to the threshold, just return a best-effort graph.
                 var bestTestedGraph = testedGraphs.Where(testedGraph => testedGraph.Item1 == testedGraphs.Min(minDeviation => minDeviation.Item1)).First();
+
+                UpdateGUIWithState("No perfectly fitting subdigraph found, using a best-effort subdigraph with " + bestTestedGraph.Item1.ToString() + " deviation...");
+
                 bestCS = bestTestedGraph.Item2;
                 webDocuments = bestTestedGraph.Item3;
                 websiteTemplate = bestTestedGraph.Item4;
@@ -266,6 +295,9 @@ namespace NLPWebScraper
 
         private List<DocumentScrapingResult> NodeFiltering()
         {
+            if (isLookingForTemplate)
+                UpdateGUIWithState("Node filtering with text density and hyperlink density metrics...");
+
             List<DocumentScrapingResult> filteredDocumentNodes = new List<DocumentScrapingResult>();
 
             int validPagesNumber = scrapingResults.Count(scrapingResult => scrapingResult.isValid);
@@ -388,6 +420,9 @@ namespace NLPWebScraper
 
         private void ComputeTopWords()
         {
+            if (isLookingForTemplate)
+             UpdateGUIWithState("Computing top words using TF-IDF...");
+
             var documentsTFIDF = Utils.Transform(scrapingResults.Select(result => result.sentencesWords).ToList());
             for (int iDocIdx = 0; iDocIdx < documentsTFIDF.Count; iDocIdx++)
             {
@@ -405,6 +440,12 @@ namespace NLPWebScraper
 
         private void ApplyNLPFiltering()
         {
+            if (isLookingForTemplate)
+            {
+                UpdateGUIWithState("Node filtering with NLP metrics...");
+                UpdateGUIWithState("Loading the Word2Vec database into memory and using it for filtering. This takes a long time...");
+            }
+
             // Aggregate all text content.
             foreach (var documentResult in scrapingResults)
             {
@@ -446,7 +487,7 @@ namespace NLPWebScraper
                         List<bool> wordsFoundInSentence = new List<bool>();
                         for (int wordIndex = 0; wordIndex < sentencesWords[sentenceIndex].Count; wordIndex++)
                         {
-                            var vec = Word2VecManager.GetVecForWord(sentencesWords[sentenceIndex][wordIndex]);
+                            var vec = Word2VecManager.GetVecForWord(sentencesWords[sentenceIndex][wordIndex], Word2VecMaxCount);
                             if (vec.Length == 0)
                                 wordsFoundInSentence.Add(false);
                             else
@@ -489,6 +530,7 @@ namespace NLPWebScraper
                     documentResult.posSentences.Add(posSentences[index]);
 
                     documentResult.content += sentencesWords[index].Aggregate((i, j) => i + " " + j);
+                    documentResult.content += Environment.NewLine;
                 }
             }
         }
@@ -556,6 +598,8 @@ namespace NLPWebScraper
 
         public async Task DynamicScrapingForInformationGathering(List<string> queryTerms, int numberOfPagesToGather)
         {
+            UpdateGUIWithState("Template done. Looking for query terms...");
+
             // Clear the processed links list and add the starting page.
             processedLinks.Clear();
             processedLinks.Add(siteUrl);
@@ -685,11 +729,14 @@ namespace NLPWebScraper
                         }
                     }
 
-                    // We are not on the main (GUI) thread so we need to update the GUI with an invoke.
-                    Application.Current.Dispatcher.Invoke(() =>
+                    UpdateGUIWithState("Scraped: " + pagesScrapedSoFar + ".   Queue: " + linksToProcess.Count + ".   Found: " + scrapingResults.Count + "...");
+
+                    // Update the database of sites periodically.
+                    if (pagesScrapedSoFar - previousSerializationMoment > databaseUpdateCount)
                     {
-                        callbackToGUI(pagesScrapedSoFar, linksToProcess.Count, scrapingResults.Count);
-                    });
+                        previousSerializationMoment = pagesScrapedSoFar;
+                        SerializeSiteInformation();
+                    }
 
                     if (scrapingResults.Count >= numberOfPagesToGather)
                     {

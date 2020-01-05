@@ -13,7 +13,6 @@ namespace NLPWebScraper
     {
         #region Constants
         private const string word2VecDatabasePath = "googleWord2Vec.bin";
-        private const int maximumSummarySize = 200;
         private const int databaseFeatureSize = 300;
         #endregion
 
@@ -28,10 +27,10 @@ namespace NLPWebScraper
         #endregion
 
         #region Private methods
-        private static void LoadUpWord2VecDatabase()
+        private static void LoadUpWord2VecDatabase(int initSize = 1500000)
         {
             if (word2VecDistance == null && File.Exists(word2VecDatabasePath))
-                word2VecDistance = new Distance(word2VecDatabasePath);
+                word2VecDistance = new Distance(word2VecDatabasePath, initSize);
         }
 
         private static void ComputeSentenceVector(string[] sentence, ref float[] sumSentence)
@@ -65,9 +64,9 @@ namespace NLPWebScraper
         #endregion
 
         #region Public methods
-        public static float[] GetVecForWord(string word)
+        public static float[] GetVecForWord(string word, int initSize = 1500000)
         {
-            LoadUpWord2VecDatabase();
+            LoadUpWord2VecDatabase(initSize);
             if (word2VecDistance == null)
                 return Array.Empty<float>();
 
@@ -85,7 +84,7 @@ namespace NLPWebScraper
             return vec;
         }
 
-        public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites)
+        public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites, int summarySize)
         {
             if (scrapedWebsites == null)
                 return;
@@ -190,7 +189,7 @@ namespace NLPWebScraper
                         scrapingResult.contentSummary += scrapingResult.sentencesWords[topSentencesIdx].Aggregate((i, j) => i + " " + j) + Environment.NewLine;
                         wordCount += scrapingResult.sentencesWords[topSentencesIdx].Count;
 
-                        if (wordCount > maximumSummarySize)
+                        if (wordCount > summarySize)
                             break;
                     }
                 }

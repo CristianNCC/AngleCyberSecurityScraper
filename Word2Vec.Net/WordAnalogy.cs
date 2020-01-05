@@ -9,7 +9,7 @@ namespace Word2Vec.Net
     public class WordAnalogy :Word2VecAnalysisBase
     {
 
-        public WordAnalogy(string fileName) : base(fileName) { }
+        public WordAnalogy(string fileName, int initSize) : base(fileName, initSize) { }
 
         public BestWord[] Search(string text)
         {

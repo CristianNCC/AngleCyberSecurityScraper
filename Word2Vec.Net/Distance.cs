@@ -20,7 +20,7 @@ namespace Word2Vec.Net
         /// 
         /// </summary>
         /// <param name="fileName">path to binary file created by Word2Vec</param>
-        public Distance(string fileName) : base(fileName)
+        public Distance(string fileName, int initSize) : base(fileName, initSize)
         {
 
         }
