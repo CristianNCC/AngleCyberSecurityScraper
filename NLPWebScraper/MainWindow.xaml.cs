@@ -12,14 +12,16 @@ using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
 using System.IO;
+using AngleSharp;
 
 namespace NLPWebScraper
 {
     public partial class MainWindow : Window
     {
         private string pathToResults = "../Files/results.txt";
+        private string pathToResultsHTML = "../Files/results.html";
 
-        public bool analyzeNamedEntities = true;
+        public bool analyzeNamedEntities = false;
         public int numberOfPages;
         public List<string> queryTerms;
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
@@ -70,8 +72,12 @@ namespace NLPWebScraper
 
                 UpdateTextBoxWithStatus("Writing the results to disk...");
                 ConcatenateDataForPrint(scrapedWebsite, ref results);
-                UpdateTextBoxWithStatus("Done writing the results to disk. The process is finished...");
+                UpdateTextBoxWithStatus("Done writing the results to disk as a text file.");
                 spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
+
+                var outputHTML = await CreateHTMLDocumentFromSummaryAsync(scrapedWebsite).ConfigureAwait(true);
+                File.WriteAllText(pathToResultsHTML, outputHTML.ToHtml());
+                UpdateTextBoxWithStatus("Generated a HTML page and saved to disk. The process is finished...");
             }
         }
 
@@ -128,9 +134,9 @@ namespace NLPWebScraper
                     results += "Most important words in document: ";
                     for (int iWordIdx = 0; iWordIdx < documentResult.topWords.Count; iWordIdx++)
                     {
-                        results += documentResult.topWords[iWordIdx] + " ";
+                        results += documentResult.topWords[iWordIdx];
 
-                        if (iWordIdx != 4)
+                        if (iWordIdx != documentResult.topWords.Count - 1)
                             results += ", ";
                         else
                             results += ".";
@@ -244,6 +250,43 @@ namespace NLPWebScraper
                     }
                 }
             }
+        }
+
+        private static async Task<IDocument> CreateHTMLDocumentFromSummaryAsync(DynamicallyScrapedWebsite scrapedWebsite)
+        {
+            var context = BrowsingContext.New();
+            var document = await context.OpenNewAsync().ConfigureAwait(true);
+
+            foreach (var documentResult in scrapedWebsite.scrapingResults)
+            {
+                var titleElement = document.CreateElement("h2");
+                titleElement.TextContent = documentResult.title + Environment.NewLine;
+                document.Body.AppendChild(titleElement);
+
+                if (documentResult.topWords.Count > 0)
+                {
+                    var topWordsElement = document.CreateElement("h3");
+                    topWordsElement.TextContent += "Most important words in document: ";
+                    for (int iWordIdx = 0; iWordIdx < documentResult.topWords.Count; iWordIdx++)
+                    {
+                        topWordsElement.TextContent += documentResult.topWords[iWordIdx];
+
+                        if (iWordIdx != documentResult.topWords.Count - 1)
+                            topWordsElement.TextContent += ", ";
+                        else
+                            topWordsElement.TextContent += ".";
+                    }
+
+                    topWordsElement.TextContent += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+                    document.Body.AppendChild(topWordsElement);
+                }
+
+                var summaryElement = document.CreateElement("p");
+                summaryElement.TextContent = documentResult.contentSummary + Environment.NewLine;
+                document.Body.AppendChild(summaryElement);
+            }
+
+            return document;
         }
 
         private void LoadUpSupportedWebsites()

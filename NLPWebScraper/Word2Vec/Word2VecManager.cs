@@ -166,6 +166,9 @@ namespace NLPWebScraper
                     // TextRank algorithm for sentences in documents.
                     var rankedDictionary = new PageRank<string>().Rank(documentGraph, 1.0f);
 
+                    if (rankedDictionary == null)
+                        return;
+
                     // In PageRank, we're looking for higher scores, so we sort in a descending manner.
                     var rankedSentencesList = rankedDictionary.ToList().OrderByDescending(sentence => sentence.Value).ToList();
 
@@ -190,7 +193,18 @@ namespace NLPWebScraper
                         wordCount += scrapingResult.sentencesWords[topSentencesIdx].Count;
 
                         if (wordCount > summarySize)
+                        {
+                            for (int i = 0; i < scrapingResult.contentSummary.Length; i++)
+                            {
+                                if (i < scrapingResult.contentSummary.Length - 1 && scrapingResult.contentSummary[i] == ' ' 
+                                    && (scrapingResult.contentSummary[i+1] == '.' || scrapingResult.contentSummary[i + 1] == ','))
+                                {
+                                    scrapingResult.contentSummary = scrapingResult.contentSummary.Remove(i, 1);
+                                }
+                            }
+
                             break;
+                        }
                     }
                 }
             }
