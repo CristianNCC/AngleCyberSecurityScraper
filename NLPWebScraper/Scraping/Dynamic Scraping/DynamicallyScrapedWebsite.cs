@@ -190,11 +190,17 @@ namespace NLPWebScraper
             HashSet<Tuple<double, HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>> testedGraphs = 
                 new HashSet<Tuple<double, HashSet<string>, List<IHtmlDocument>, Dictionary<string, int>>>();
 
-            foreach (var link in mainPageLinks)
+            foreach (var iLink in mainPageLinks)
             {
+                var link = iLink;
+
                 // Skip links that sidetrack us to other sites.
                 Uri currentLinkUri = new Uri(link);
-                if (currentLinkUri == null || new Uri(siteUrl).Host != currentLinkUri.Host)
+
+                string currentLinkHost = currentLinkUri.Host;
+                if (link.Contains("about://"))
+                    link = link.Replace("about://", "");
+                else if (currentLinkUri == null || new Uri(siteUrl).Host != currentLinkHost) 
                     continue;
 
                 // Get the DOM of the current subpage.
