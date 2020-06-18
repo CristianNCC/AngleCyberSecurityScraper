@@ -27,7 +27,7 @@ namespace NLPWebScraper
         #endregion
 
         #region Private methods
-        private static void LoadUpWord2VecDatabase(int initSize = 1500000)
+        public static void LoadUpWord2VecDatabase(int initSize = 1500000)
         {
             if (word2VecDistance == null && File.Exists(word2VecDatabasePath))
                 word2VecDistance = new Distance(word2VecDatabasePath, initSize);
@@ -84,6 +84,27 @@ namespace NLPWebScraper
             return vec;
         }
 
+        public static float GetSentencesSimilarity(string[] sentenceOne, string[] sentenceTwo)
+        {
+            if (sentenceOne == null || sentenceTwo == null)
+                return 0.0f;
+
+            float[] sumSentenceOne = new float[databaseFeatureSize];
+            Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
+            float[] sumSentenceTwo = new float[databaseFeatureSize];
+            Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
+
+            ComputeSentenceVector(sentenceOne, ref sumSentenceOne);
+            ComputeSentenceVector(sentenceTwo, ref sumSentenceTwo);
+
+            float ratioOne = 1.0f / sumSentenceOne.Sum();
+            sumSentenceOne = sumSentenceOne.Select(o => o * ratioOne).ToList().ToArray();
+            float ratioTwo = 1.0f / sumSentenceTwo.Sum();
+            sumSentenceTwo = sumSentenceTwo.Select(o => o * ratioTwo).ToList().ToArray();
+            
+            return MainUtils.CalculateCosineSimilarity(sumSentenceOne, sumSentenceTwo);
+        }
+
         public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites, int summarySize)
         {
             if (scrapedWebsites == null)
@@ -121,21 +142,8 @@ namespace NLPWebScraper
                             string[] sentenceOne = scrapingResult.sentencesWords[sentenceOneIdx].ToArray();
                             string[] sentenceTwo = scrapingResult.sentencesWords[sentenceTwoIdx].ToArray();
 
-                            float[] sumSentenceOne = new float[databaseFeatureSize];
-                            Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
-                            float[] sumSentenceTwo = new float[databaseFeatureSize];
-                            Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
-
-                            ComputeSentenceVector(sentenceOne, ref sumSentenceOne);
-                            ComputeSentenceVector(sentenceTwo, ref sumSentenceTwo);
-
-                            float ratioOne = 1.0f / sumSentenceOne.Sum();
-                            sumSentenceOne = sumSentenceOne.Select(o => o * ratioOne).ToList().ToArray();
-                            float ratioTwo = 1.0f / sumSentenceTwo.Sum();
-                            sumSentenceTwo = sumSentenceTwo.Select(o => o * ratioTwo).ToList().ToArray();
-
                             documentMatrix[sentenceOneIdx].Add(new float());
-                            documentMatrix[sentenceOneIdx][sentenceTwoIdx] = Utils.CalculateCosineSimilarity(sumSentenceOne, sumSentenceTwo);
+                            documentMatrix[sentenceOneIdx][sentenceTwoIdx] = GetSentencesSimilarity(sentenceOne, sentenceTwo);
                         }
                     }
 

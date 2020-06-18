@@ -13,6 +13,8 @@ using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
 using System.IO;
 using AngleSharp;
+using OpenNLP;
+using System.Threading;
 
 namespace NLPWebScraper
 {
@@ -35,6 +37,29 @@ namespace NLPWebScraper
         public MainWindow()
         {
             InitializeComponent();
+
+            UICallbackTimer.DelayExecution(TimeSpan.FromSeconds(2),  () => 
+            {
+                new Thread(() =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        IsEnabled = false;
+                        spinnerControl.Visibility = System.Windows.Visibility.Visible;
+                    });
+
+                    Word2VecManager.LoadUpWord2VecDatabase();
+                    SiteDatabaseManager.DeserializeSiteInformation();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        IsEnabled = true;
+                        spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
+                    });
+
+                }).Start();
+            });
+
             dynamicScrapingCheckbox.IsChecked = true;
             dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
             LoadUpSupportedWebsites();
@@ -71,7 +96,7 @@ namespace NLPWebScraper
                 }
 
                 UpdateTextBoxWithStatus("Writing the results to disk...");
-                ConcatenateDataForPrint(scrapedWebsite, ref results);
+                ConcatenateDataForPrint(scrapedWebsite.scrapingResults, ref results);
                 UpdateTextBoxWithStatus("Done writing the results to disk as a text file.");
                 spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
 
@@ -81,10 +106,10 @@ namespace NLPWebScraper
             }
         }
 
-        private void ConcatenateDataForPrint(DynamicallyScrapedWebsite scrapedWebsite, ref string results) 
+        private void ConcatenateDataForPrint(List<DocumentScrapingResult> scrapingResults, ref string results) 
         {
             int iDocumentIdx = 0;
-            foreach (var documentResult in scrapedWebsite.scrapingResults)
+            foreach (var documentResult in scrapingResults)
             {
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                 results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
@@ -101,10 +126,10 @@ namespace NLPWebScraper
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
                     var namedEntities = OpenNLP.APIOpenNLP.FindNames(documentResult.content);
-                    var dateListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<date>"), (Utils.AllIndexesOf(namedEntities, "</date>")));
-                    var personListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<person>"), (Utils.AllIndexesOf(namedEntities, "</person>")));
-                    var timeListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<time>"), (Utils.AllIndexesOf(namedEntities, "</time>")));
-                    var organizationListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<organization>"), (Utils.AllIndexesOf(namedEntities, "</organization>")));
+                    var dateListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<date>"), (MainUtils.AllIndexesOf(namedEntities, "</date>")));
+                    var personListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<person>"), (MainUtils.AllIndexesOf(namedEntities, "</person>")));
+                    var timeListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<time>"), (MainUtils.AllIndexesOf(namedEntities, "</time>")));
+                    var organizationListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<organization>"), (MainUtils.AllIndexesOf(namedEntities, "</organization>")));
 
                     results += dateListTupleIndexes.Count > 0 ? "Dates: " : "";
                     foreach (var tuple in dateListTupleIndexes)
@@ -326,7 +351,7 @@ namespace NLPWebScraper
                 DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
                 if (scrapedWebsite == null)
                     continue;
-                ConcatenateDataForPrint(scrapedWebsite, ref results);
+                ConcatenateDataForPrint(scrapedWebsite.scrapingResults, ref results);
             }
             File.WriteAllText(pathToResults, results); 
         }
@@ -361,6 +386,84 @@ namespace NLPWebScraper
                 queryTermsTextBox.IsEnabled = false;
             else
                 queryTermsTextBox.IsEnabled = true;
+        }
+
+        private void onAsk(object sender, RoutedEventArgs e)
+        {
+            var question = questionTextbox.Text;
+            var siteUrl = targetWebsiteTextbox.Text;
+
+            new Thread(async () =>
+            {
+                  Dispatcher.Invoke(() =>
+                  {
+                      spinnerControl.Visibility = System.Windows.Visibility.Visible;
+                  });
+
+                  SiteDatabaseManager.DeserializeSiteInformation();
+
+                  var tokenizedQuestion = APIOpenNLP.TokenizeSentence(question);
+                  var filteredQuestion = tokenizedQuestion.Where(word => !StopWords.GetStopWordsList().Contains(word.ToLower())).ToList();
+
+                  // Find the best fit page for this question.
+                  float bestFitPageSimilarity = 0.0f;
+                  string bestFitPageURL = null;
+                  foreach (var databaseEntry in SiteDatabaseManager.extractionDatabase)
+                  {
+                      var topWordsInEntry = databaseEntry.topWords.ToArray();
+                      float similarity = Word2VecManager.GetSentencesSimilarity(tokenizedQuestion, topWordsInEntry);
+                      if (similarity > bestFitPageSimilarity)
+                      {
+                          bestFitPageSimilarity = similarity;
+                          bestFitPageURL = databaseEntry.pageUrl;
+                      }
+                  }
+
+                  var document = await MainUtils.GetSubPageFromLink(bestFitPageURL, siteUrl).ConfigureAwait(true);
+                  if (document == null)
+                      return;
+
+                  List<DocumentScrapingResult> scrapingResults = new List<DocumentScrapingResult>();
+                  List<WebPage> webPagesList = new List<WebPage>
+                  {
+                      new WebPage(document, bestFitPageURL)
+                  };
+
+                  NoiseFilteringManager.NodeFiltering(webPagesList, ref scrapingResults);
+
+                  string results = string.Empty;
+
+                  foreach (var result in scrapingResults)
+                  {
+                    var contentList = result.scrapingResults.Select(scrapingResult => scrapingResult.element.TextContent).ToList();
+
+                    if (contentList.Count == 0)
+                        continue;
+
+                    results += contentList.Aggregate((a,b) => a + b);
+                  }
+
+                  var tokenizedSentences = APIOpenNLP.SplitSentences(results);
+
+                  float bestFitSentenceSimilarity = 0.0f;
+                  string bestFitSentence = null;
+                  foreach (var sentence in tokenizedSentences)
+                  {
+                    float similarity = Word2VecManager.GetSentencesSimilarity(tokenizedQuestion, APIOpenNLP.TokenizeSentence(sentence));
+                    if (similarity > bestFitSentenceSimilarity)
+                    {
+                        bestFitSentenceSimilarity = similarity;
+                        bestFitSentence = sentence;
+                    }
+                  }
+
+                  Dispatcher.Invoke(() =>
+                  {
+                      scrapingStatusTextbox.Text = bestFitSentence;
+                      spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
+                  });
+
+              }).Start();
         }
     }
 }

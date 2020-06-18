@@ -23,7 +23,7 @@ namespace NLPWebScraper
             for (int iPageIdx = 0; iPageIdx < numberOfPages; iPageIdx++)
             {;
 
-                Task<IHtmlDocument> documentTask = GetDocumentFromLink(currentSiteUrl);
+                Task<IHtmlDocument> documentTask = MainUtils.GetDocumentFromLink(currentSiteUrl);
                 IHtmlDocument document = await documentTask.ConfigureAwait(true);
                 webDocuments.Add(document);
 

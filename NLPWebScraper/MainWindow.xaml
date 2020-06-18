@@ -14,7 +14,7 @@
 
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition Height="2.5*"/>
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
@@ -29,39 +29,45 @@
                 <GroupBox Name="dynamicScrapingGroupBox" Header="Dynamic scraping" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Margin="5" IsEnabled="False">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
                         </Grid.RowDefinitions>
 
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
+                            <ColumnDefinition Width="123*"/>
+                            <ColumnDefinition Width="70*"/>
+                            <ColumnDefinition Width="193*"/>
+                            <ColumnDefinition Width="192*"/>
+                            <ColumnDefinition Width="192*"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Target website:"  Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com/" Grid.Column="1" Margin="5 0 5 0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBlock Text="Target website:"  Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+                        <TextBox Name="targetWebsiteTextbox" Text="https://thehackernews.com/" Grid.Column="2" Margin="5,6" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="Subdigraph Size:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="3" Name="subdigraphSizeTextbox" PreviewTextInput="NumberValidationTextBox" Text="4" Width="Auto" Height="20" Margin="5 0 5 0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="3" Text="Subdigraph Size:" Margin="5,7" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="4" Name="subdigraphSizeTextbox" PreviewTextInput="NumberValidationTextBox" Text="4" Width="Auto" Height="20" Margin="5"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Number of Pages:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Name="numberOfPagesTextBox" Text="10" Margin="5 0 5 0" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Number of Pages:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+                        <TextBox Grid.Row="1" Grid.Column="2" Name="numberOfPagesTextBox" Text="10" Margin="5,6" PreviewTextInput="NumberValidationTextBox" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Query Terms (comma separated):" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="0" Grid.Column="3" Name="queryTermsTextBox" IsEnabled="False" Text="exploit" Width="Auto" Height="20" Margin="5 0 5 0"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Query Terms (comma separated):" Margin="5,7" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="4" Name="queryTermsTextBox" IsEnabled="False" Text="exploit" Width="Auto" Height="20" Margin="5"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Summary Length:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Name="summarySizeTextbox" PreviewTextInput="NumberValidationTextBox" Text="150" Width="Auto" Height="20" Margin="5 0 5 0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Summary Length:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+                        <TextBox Grid.Row="2" Grid.Column="2" Name="summarySizeTextbox" PreviewTextInput="NumberValidationTextBox" Text="150" Width="Auto" Height="20" Margin="5"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="2" Text="Maximum connections:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="3" Name="maxConnectionsTextbox" PreviewTextInput="NumberValidationTextBox" Text="3000" Width="Auto" Height="20" Margin="5 0 5 0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="3" Text="Maximum connections:" Margin="5,7" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="4" Name="maxConnectionsTextbox" PreviewTextInput="NumberValidationTextBox" Text="3000" Width="Auto" Height="20" Margin="5"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Word2vec Count:" Margin="5" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Name="word2VecCountToLoadTextbox" PreviewTextInput="NumberValidationTextBox" Text="1500000" Width="Auto" Height="20" Margin="5 0 5 0"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Word2vec Count:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+                        <TextBox Grid.Row="3" Grid.Column="2" Name="word2VecCountToLoadTextbox" PreviewTextInput="NumberValidationTextBox" Text="1500000" Width="Auto" Height="20" Margin="5"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Question query:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+                        <TextBox Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="2" Text="What is new about Google?" Name="questionTextbox"  Width="Auto" Height="20" Margin="5"/>
+                        <Button  Grid.Row="4" Content="Ask" Height="20" Grid.Column="4" Click="onAsk"/>
                     </Grid>
                 </GroupBox>
 
