@@ -35,7 +35,7 @@ namespace NLPWebScraper
         public int MaximalSubdigraphSize { get; set; } = 4;
         public int MaxConnectionsCount { get; set; } = 3000;
 
-        public int Word2VecMaxCount { get; set; } = 1500000;
+        public int Word2VecMaxCount { get; set; } = 150000;
 
         public DynamicallyScrapedWebsite(string siteUrl, int subdigraphSize, int maxConnections, int word2VecMaxCount, UpdateGUIMethod callback) : base(siteUrl) 
         {

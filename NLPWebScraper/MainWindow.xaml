@@ -63,7 +63,7 @@
                         <TextBox Grid.Row="2" Grid.Column="4" Name="maxConnectionsTextbox" PreviewTextInput="NumberValidationTextBox" Text="3000" Width="Auto" Height="20" Margin="5"/>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Word2vec Count:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
-                        <TextBox Grid.Row="3" Grid.Column="2" Name="word2VecCountToLoadTextbox" PreviewTextInput="NumberValidationTextBox" Text="1500000" Width="Auto" Height="20" Margin="5"/>
+                        <TextBox Grid.Row="3" Grid.Column="2" Name="word2VecCountToLoadTextbox" PreviewTextInput="NumberValidationTextBox" Text="150000" Width="Auto" Height="20" Margin="5"/>
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Question query:" Margin="5,7" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
                         <TextBox Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="2" Text="What is new about Google?" Name="questionTextbox"  Width="Auto" Height="20" Margin="5"/>

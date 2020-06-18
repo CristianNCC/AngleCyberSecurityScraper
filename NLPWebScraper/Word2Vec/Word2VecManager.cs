@@ -27,7 +27,7 @@ namespace NLPWebScraper
         #endregion
 
         #region Private methods
-        public static void LoadUpWord2VecDatabase(int initSize = 1500000)
+        public static void LoadUpWord2VecDatabase(int initSize = 150000)
         {
             if (word2VecDistance == null && File.Exists(word2VecDatabasePath))
                 word2VecDistance = new Distance(word2VecDatabasePath, initSize);
@@ -64,7 +64,7 @@ namespace NLPWebScraper
         #endregion
 
         #region Public methods
-        public static float[] GetVecForWord(string word, int initSize = 1500000)
+        public static float[] GetVecForWord(string word, int initSize = 150000)
         {
             LoadUpWord2VecDatabase(initSize);
             if (word2VecDistance == null)
