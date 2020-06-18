@@ -46,7 +46,7 @@ namespace PageRank.Graph
         /// <returns></returns>
         public GraphNode<T> Get(T value)
         {
-            return this.FindByValue(value);
+            return FindByValue(value);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace PageRank.Graph
         {
             try
             {
-                var nodeToRemove = this.FindByValue(value) as GraphNode<T>;
+                var nodeToRemove = FindByValue(value) as GraphNode<T>;
                 _nodeSet.RemoveWhere(node => node == nodeToRemove);
             }
             catch (Exception ex)
@@ -108,7 +108,7 @@ namespace PageRank.Graph
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         new public List<GraphNode<T>> ToList

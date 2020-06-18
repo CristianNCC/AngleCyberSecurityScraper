@@ -54,10 +54,10 @@ namespace PageRank.Graph
         {
             get
             {
-                if (this._neighbors == null)
+                if (_neighbors == null)
                     _neighbors = new Neighbors<T>();
 
-                return this._neighbors;
+                return _neighbors;
             }
         }
 
@@ -68,7 +68,7 @@ namespace PageRank.Graph
         {
             get
             {
-                if (this._neighbors == null)
+                if (_neighbors == null)
                     _neighbors = new Neighbors<T>();
 
                 List<GraphNode<T>> list = new List<GraphNode<T>>();

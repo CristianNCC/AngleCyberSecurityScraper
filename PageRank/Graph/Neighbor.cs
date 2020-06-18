@@ -13,8 +13,8 @@ namespace PageRank.Graph
 
         public Neighbor(GraphNode<T> neighbor, double weight)
         {
-            this._neighbor = neighbor;
-            this._weight = weight;
+            _neighbor = neighbor;
+            _weight = weight;
         }
 
         public GraphNode<T> GraphNode
@@ -31,7 +31,7 @@ namespace PageRank.Graph
         {
             try
             {
-                this._weight = weight;
+                _weight = weight;
             }
             catch (Exception) { }
         }

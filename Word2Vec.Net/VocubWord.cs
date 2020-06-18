@@ -12,7 +12,7 @@ namespace Word2Vec.Net
         public int[] Point { get; set; }
         public int CompareTo(VocubWord other)
         {
-            return (int)(this.Cn - other.Cn);
+            return (int)(Cn - other.Cn);
         }
     }
     // Used later for sorting by word counts

@@ -30,3 +30,4 @@ C:\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.csprojAssemblyReference.cache
 C:\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.csproj.CopyComplete
 C:\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.dll
 C:\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.pdb
+C:\Users\Cristi\Desktop\NLP-WebScraper\OpenNLP\obj\Debug\OpenNLP.csproj.CoreCompileInputs.cache

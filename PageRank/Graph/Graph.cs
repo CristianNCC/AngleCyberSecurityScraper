@@ -109,7 +109,7 @@ namespace PageRank.Graph
             get
             {
                 List<GraphNode<T>> _danglinNodes = new List<GraphNode<T>>();
-                foreach (var node in this.OutDegree)
+                foreach (var node in OutDegree)
                 {
                     if (node.Value == 0)
                         _danglinNodes.Add(node.Key);
@@ -146,7 +146,7 @@ namespace PageRank.Graph
         {
             get
             {
-                return this.Count > 0 ? false : true;
+                return Count > 0 ? false : true;
             }
         }
 
@@ -159,7 +159,7 @@ namespace PageRank.Graph
         {
             get
             {
-                if (this.IsEmpty)
+                if (IsEmpty)
                     return null;
                 else
                     return GetOutDegree();
@@ -182,7 +182,7 @@ namespace PageRank.Graph
         internal GraphNode<T> FindByValue(T value)
         {
             GraphNode<T> node = null;
-            node = this._nodeSet.FindByValue(value);
+            node = _nodeSet.FindByValue(value);
 
             return node;
         }
@@ -255,10 +255,10 @@ namespace PageRank.Graph
             if (source == null || destination == null)
                 return;
 
-            var gsource = this.Add(source);
-            var gdestination = this.Add(destination);
+            var gsource = Add(source);
+            var gdestination = Add(destination);
 
-            this.AddEdges(gsource, gdestination, weight);
+            AddEdges(gsource, gdestination, weight);
         }
     }
 }

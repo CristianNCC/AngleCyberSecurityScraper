@@ -38,7 +38,7 @@ namespace Word2Vec.Net
 
         public Word2VecBuilder WithSize(int size)
         {
-            this._layer1Size = size;
+            _layer1Size = size;
             return this;
         }
 
@@ -49,7 +49,7 @@ namespace Word2Vec.Net
         /// <returns></returns>
         public Word2VecBuilder WithTrainFile(string trainFileName)
         {
-            this._trainFile = trainFileName;
+            _trainFile = trainFileName;
             return this;
         }
 
@@ -60,77 +60,77 @@ namespace Word2Vec.Net
         /// <returns></returns>
         public Word2VecBuilder WithSaveVocubFile(string saveVocubFileName)
         {
-            this._saveVocabFile = saveVocubFileName;
+            _saveVocabFile = saveVocubFileName;
             return this;
         }
         public Word2VecBuilder WithReadVocubFile(string readVocubFileName)
         {
-            this._readVocabFile = readVocubFileName;
+            _readVocabFile = readVocubFileName;
             return this;
         }
         public Word2VecBuilder WithDebug(int debugMode)
         {
-            this._debugMode = debugMode;
+            _debugMode = debugMode;
             return this;
         }
         public Word2VecBuilder WithBinary(int binary)
         {
-            this._binary = binary;
+            _binary = binary;
             return this;
         }
         public Word2VecBuilder WithCBow(int cbow)
         {
-            this._cbow = cbow;
+            _cbow = cbow;
             return this;
         }
         public Word2VecBuilder WithAlpha(float alpha)
         {
-            this._alpha = alpha;
+            _alpha = alpha;
             return this;
         }
         public Word2VecBuilder WithOutputFile(string outputFileName)
         {
-            this._outputFile = outputFileName;
+            _outputFile = outputFileName;
             return this;
         }
         public Word2VecBuilder WithSample(float sample)
         {
-            this._sample = sample;
+            _sample = sample;
             return this;
         }
         public Word2VecBuilder WithHs(int hs)
         {
-            this._hs = hs;
+            _hs = hs;
             return this;
         }
         public Word2VecBuilder WithNegative(int negative)
         {
-            this._negative = negative;
+            _negative = negative;
             return this;
         }
         public Word2VecBuilder WithThreads(int threads)
         {
-            this._numThreads = threads;
+            _numThreads = threads;
             return this;
         }
         public Word2VecBuilder WithIter(int iter)
         {
-            this._iter = iter;
+            _iter = iter;
             return this;
         }
         public Word2VecBuilder WithMinCount(int count)
         {
-            this._minCount = count;
+            _minCount = count;
             return this;
         }
         public Word2VecBuilder WithClasses(int classes)
         {
-            this._classes = classes;
+            _classes = classes;
             return this;
         }
         public Word2VecBuilder WithWindow(int window)
         {
-            this._window = window;
+            _window = window;
             return this;
         }
 
