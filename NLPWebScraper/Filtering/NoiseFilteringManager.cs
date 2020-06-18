@@ -20,6 +20,11 @@ namespace NLPWebScraper
 {
     public static class NoiseFilteringManager
     {
+        public const int maximalWordCount = 20;
+        public const int minimumSentenceSize = 5;
+
+        public static int Word2VecMaxCount { get; set; } = 150000;
+
         public static void NodeFiltering(List<WebPage> webDocuments, ref List<DocumentScrapingResult> scrapingResults)
         {
             if (webDocuments == null || scrapingResults == null)
@@ -145,6 +150,100 @@ namespace NLPWebScraper
 
                 documentNodes.scrapingResults.ForEach(node => commonStrings.ForEach(commonString => node.element.TextContent = node.element.TextContent.Replace(commonString, string.Empty)));
                 documentNodes.scrapingResults = documentNodes.scrapingResults.Where(node => node.element.TextContent.Length > 0).ToList();
+            }
+        }
+
+        public static void ApplyNLPFiltering(ref List<DocumentScrapingResult> scrapingResults)
+        {
+            if (scrapingResults == null)
+                return;
+
+            // Aggregate all text content.
+            foreach (var documentResult in scrapingResults)
+            {
+                if (documentResult.isValid)
+                    continue;
+
+                documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
+
+                var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
+
+                List<string> filteredSentences = new List<string>();
+                List<List<string>> sentencesWords = new List<List<string>>();
+                foreach (var sentence in sentences)
+                {
+                    var filteredSentence = sentence.Replace("\n", "");
+                    filteredSentence = filteredSentence.Replace("\t", "");
+                    filteredSentences.Add(filteredSentence);
+
+                    sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
+                }
+
+                List<List<string>> posSentences = new List<List<string>>();
+                foreach (var sentenceWordList in sentencesWords)
+                    posSentences.Add(OpenNLP.APIOpenNLP.PosTagTokens(sentenceWordList.ToArray()).ToList());
+
+                List<int> indexesToRemove = new List<int>();
+                for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
+                {
+                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")) || sentencesWords[sentenceIndex].Any(word => word.Length > maximalWordCount))
+                        indexesToRemove.Add(sentenceIndex);
+                }
+
+                bool wordRemovalConverged = true;
+                do
+                {
+                    wordRemovalConverged = true;
+                    for (int sentenceIndex = 0; sentenceIndex < sentencesWords.Count; sentenceIndex++)
+                    {
+                        List<bool> wordsFoundInSentence = new List<bool>();
+                        for (int wordIndex = 0; wordIndex < sentencesWords[sentenceIndex].Count; wordIndex++)
+                        {
+                            var vec = Word2VecManager.GetVecForWord(sentencesWords[sentenceIndex][wordIndex], Word2VecMaxCount);
+                            if (vec.Length == 0)
+                                wordsFoundInSentence.Add(false);
+                            else
+                                wordsFoundInSentence.Add(true);
+                        }
+
+                        for (int wordIndex = 1; wordIndex < sentencesWords[sentenceIndex].Count - 1; wordIndex++)
+                        {
+                            if (!wordsFoundInSentence[wordIndex - 1] && !wordsFoundInSentence[wordIndex] && !wordsFoundInSentence[wordIndex + 1])
+                            {
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex + 1);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex + 1);
+                                wordsFoundInSentence.RemoveAt(wordIndex + 1);
+
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex);
+                                wordsFoundInSentence.RemoveAt(wordIndex);
+                                wordIndex--;
+
+                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
+                                posSentences[sentenceIndex].RemoveAt(wordIndex);
+                                wordsFoundInSentence.RemoveAt(wordIndex);
+
+                                wordRemovalConverged = false;
+                            }
+                        }
+                    }
+                } while (!wordRemovalConverged);
+
+                documentResult.content = string.Empty;
+                for (int index = 0; index < sentencesWords.Count; index++)
+                {
+                    if (indexesToRemove.Contains(index))
+                        continue;
+
+                    if (sentencesWords[index].Count < minimumSentenceSize)
+                        continue;
+
+                    documentResult.sentencesWords.Add(sentencesWords[index]);
+                    documentResult.posSentences.Add(posSentences[index]);
+
+                    documentResult.content += sentencesWords[index].Aggregate((i, j) => i + " " + j);
+                    documentResult.content += Environment.NewLine;
+                }
             }
         }
     }

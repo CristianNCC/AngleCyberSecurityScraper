@@ -27,19 +27,15 @@ namespace NLPWebScraper
 
         public bool isLookingForTemplate = true;
 
-        private const int maximalWordCount = 20;
-        private const int minimumSentenceSize = 5;
         private const float thresholdStandardDevianceTemplate = 1.0f;
         private const float thresholdStandardDevianceGathering = 1.0f;
 
         public int MaximalSubdigraphSize { get; set; } = 4;
         public int MaxConnectionsCount { get; set; } = 3000;
 
-        public int Word2VecMaxCount { get; set; } = 150000;
-
         public DynamicallyScrapedWebsite(string siteUrl, int subdigraphSize, int maxConnections, int word2VecMaxCount, UpdateGUIMethod callback) : base(siteUrl) 
         {
-            Word2VecMaxCount = word2VecMaxCount;
+            NoiseFilteringManager.Word2VecMaxCount = word2VecMaxCount;
             MaximalSubdigraphSize = subdigraphSize;
             MaxConnectionsCount = maxConnections;
             callbackToGUI = callback;
@@ -79,8 +75,10 @@ namespace NLPWebScraper
             // Remove all common strings from every document. Usually, this will be the text on different buttons.
             NoiseFilteringManager.FilterAllCommonStrings(scrapingResults);
 
+            UpdateGUIWithState("Node filtering with NLP metrics...");
+
             // Apply NLP techniques for filtering.
-            ApplyNLPFiltering();
+            NoiseFilteringManager.ApplyNLPFiltering(ref scrapingResults);
 
             // Compute the top words for this selection or articles.
             ComputeTopWords();
@@ -281,103 +279,6 @@ namespace NLPWebScraper
             }
         }
 
-        private void ApplyNLPFiltering()
-        {
-            if (isLookingForTemplate)
-            {
-                UpdateGUIWithState("Node filtering with NLP metrics...");
-                UpdateGUIWithState("Loading the Word2Vec database into memory and using it for filtering. This takes a long time...");
-            }
-
-            // Aggregate all text content.
-            foreach (var documentResult in scrapingResults)
-            {
-                if (documentResult.isValid)
-                    continue;
-
-                documentResult.scrapingResults.ForEach(element => documentResult.content += element.element.TextContent + ".");
-
-                var sentences = OpenNLP.APIOpenNLP.SplitSentences(documentResult.content);
-
-                List<string> filteredSentences = new List<string>();
-                List<List<string>> sentencesWords = new List<List<string>>();
-                foreach (var sentence in sentences)
-                {
-                    var filteredSentence = sentence.Replace("\n", "");
-                    filteredSentence = filteredSentence.Replace("\t", "");
-                    filteredSentences.Add(filteredSentence);
-
-                    sentencesWords.Add(OpenNLP.APIOpenNLP.TokenizeSentence(filteredSentence).ToList());
-                }
-
-                List<List<string>> posSentences = new List<List<string>>();
-                foreach (var sentenceWordList in sentencesWords)
-                    posSentences.Add(OpenNLP.APIOpenNLP.PosTagTokens(sentenceWordList.ToArray()).ToList());
-
-                List<int> indexesToRemove = new List<int>();
-                for (int sentenceIndex = 0; sentenceIndex < posSentences.Count; sentenceIndex++)
-                {
-                    if (!posSentences[sentenceIndex].Any(pos => pos.Contains("V")) || sentencesWords[sentenceIndex].Any(word => word.Length > maximalWordCount))
-                        indexesToRemove.Add(sentenceIndex);
-                }
-
-                bool wordRemovalConverged = true;
-                do
-                {
-                    wordRemovalConverged = true;
-                    for (int sentenceIndex = 0; sentenceIndex < sentencesWords.Count; sentenceIndex++)
-                    {
-                        List<bool> wordsFoundInSentence = new List<bool>();
-                        for (int wordIndex = 0; wordIndex < sentencesWords[sentenceIndex].Count; wordIndex++)
-                        {
-                            var vec = Word2VecManager.GetVecForWord(sentencesWords[sentenceIndex][wordIndex], Word2VecMaxCount);
-                            if (vec.Length == 0)
-                                wordsFoundInSentence.Add(false);
-                            else
-                                wordsFoundInSentence.Add(true);
-                        }
-
-                        for (int wordIndex = 1; wordIndex < sentencesWords[sentenceIndex].Count - 1; wordIndex++)
-                        {
-                            if (!wordsFoundInSentence[wordIndex - 1] && !wordsFoundInSentence[wordIndex] && !wordsFoundInSentence[wordIndex + 1])
-                            {
-                                sentencesWords[sentenceIndex].RemoveAt(wordIndex + 1);
-                                posSentences[sentenceIndex].RemoveAt(wordIndex + 1);
-                                wordsFoundInSentence.RemoveAt(wordIndex + 1);
-
-                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
-                                posSentences[sentenceIndex].RemoveAt(wordIndex);
-                                wordsFoundInSentence.RemoveAt(wordIndex);
-                                wordIndex--;
-
-                                sentencesWords[sentenceIndex].RemoveAt(wordIndex);
-                                posSentences[sentenceIndex].RemoveAt(wordIndex);
-                                wordsFoundInSentence.RemoveAt(wordIndex);
-
-                                wordRemovalConverged = false;
-                            }
-                        }
-                    }
-                } while (!wordRemovalConverged);
-
-                documentResult.content = string.Empty;
-                for (int index = 0; index < sentencesWords.Count; index++)
-                {
-                    if (indexesToRemove.Contains(index))
-                        continue;
-
-                    if (sentencesWords[index].Count < minimumSentenceSize)
-                        continue;
-
-                    documentResult.sentencesWords.Add(sentencesWords[index]);
-                    documentResult.posSentences.Add(posSentences[index]);
-
-                    documentResult.content += sentencesWords[index].Aggregate((i, j) => i + " " + j);
-                    documentResult.content += Environment.NewLine;
-                }
-            }
-        }
-
         private void RefreshLinksHashSet(ref HashSet<LinkToBeProcessed> linksHashSet)
         {
             // Removed undefined links.
@@ -496,7 +397,7 @@ namespace NLPWebScraper
 
             NoiseFilteringManager.NodeFiltering(webDocuments, ref scrapingResults);
             NoiseFilteringManager.FilterAllCommonStrings(scrapingResults);
-            ApplyNLPFiltering();
+            NoiseFilteringManager.ApplyNLPFiltering(ref scrapingResults);
 
             // Mark elements added from the database as valid.
             foreach (var scrapingResult in scrapingResults)
@@ -528,7 +429,7 @@ namespace NLPWebScraper
                     NoiseFilteringManager.FilterAllCommonStrings(scrapingResults);
 
                     // Apply NLP techniques for filtering.
-                    ApplyNLPFiltering();
+                    NoiseFilteringManager.ApplyNLPFiltering(ref scrapingResults);
 
                     // Compute the top words for this selection or articles.
                     ComputeTopWords();

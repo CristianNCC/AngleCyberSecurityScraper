@@ -403,15 +403,21 @@ namespace NLPWebScraper
                   SiteDatabaseManager.DeserializeSiteInformation();
 
                   var tokenizedQuestion = APIOpenNLP.TokenizeSentence(question);
-                  var filteredQuestion = tokenizedQuestion.Where(word => !StopWords.GetStopWordsList().Contains(word.ToLower())).ToList();
+                  var filteredQuestionList = tokenizedQuestion.Where(word => !StopWords.GetStopWordsList().Contains(word.ToLower())).ToList();
+
+                  filteredQuestionList.Remove(".");
+                  filteredQuestionList.Remove("?");
+                  filteredQuestionList.Remove("!");
+                  filteredQuestionList.Remove(";");
+                  var filteredQuestion = filteredQuestionList.ToArray();
 
                   // Find the best fit page for this question.
-                  float bestFitPageSimilarity = 0.0f;
+                  double bestFitPageSimilarity = Double.NegativeInfinity;
                   string bestFitPageURL = null;
                   foreach (var databaseEntry in SiteDatabaseManager.extractionDatabase)
                   {
                       var topWordsInEntry = databaseEntry.topWords.ToArray();
-                      float similarity = Word2VecManager.GetSentencesSimilarity(tokenizedQuestion, topWordsInEntry);
+                      float similarity = Word2VecManager.GetSentencesSimilarity(filteredQuestion, topWordsInEntry);
                       if (similarity > bestFitPageSimilarity)
                       {
                           bestFitPageSimilarity = similarity;
@@ -430,6 +436,7 @@ namespace NLPWebScraper
                   };
 
                   NoiseFilteringManager.NodeFiltering(webPagesList, ref scrapingResults);
+                  NoiseFilteringManager.ApplyNLPFiltering(ref scrapingResults);
 
                   string results = string.Empty;
 
@@ -445,11 +452,19 @@ namespace NLPWebScraper
 
                   var tokenizedSentences = APIOpenNLP.SplitSentences(results);
 
-                  float bestFitSentenceSimilarity = 0.0f;
+                  double bestFitSentenceSimilarity = Double.NegativeInfinity;
                   string bestFitSentence = null;
                   foreach (var sentence in tokenizedSentences)
                   {
-                    float similarity = Word2VecManager.GetSentencesSimilarity(tokenizedQuestion, APIOpenNLP.TokenizeSentence(sentence));
+                    if (sentence == null)
+                        continue;
+
+                    var tokenizedSentence = APIOpenNLP.TokenizeSentence(sentence);
+                    if (tokenizedSentence == null || tokenizedSentence.Length < NoiseFilteringManager.minimumSentenceSize)
+                        continue;
+
+                    float similarity = Word2VecManager.GetSentencesSimilarity(filteredQuestion, tokenizedSentence) / tokenizedSentence.Length;
+
                     if (similarity > bestFitSentenceSimilarity)
                     {
                         bestFitSentenceSimilarity = similarity;
