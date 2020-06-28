@@ -6,11 +6,9 @@
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-
-            <CheckBox Name="dynamicScrapingCheckbox" Content="Dynamic Scraping" Click="ToggleScrapingMode" Margin="5" />
 
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
@@ -26,7 +24,7 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <GroupBox Name="dynamicScrapingGroupBox" Header="Dynamic scraping" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Margin="5" IsEnabled="False">
+                <GroupBox Name="dynamicScrapingGroupBox" Header="Dynamic scraping" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Margin="5" IsEnabled="True">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
@@ -78,9 +76,10 @@
                 </GroupBox>
 
                 <CheckBox Grid.Row="2" x:Name="scrapeOnlyForTemplateCheckbox" Content="Scrape only for template" IsChecked="True" VerticalAlignment="Center" Margin="5" Click="ScrapeForTemplateIsChecked"/>
+                <CheckBox Grid.Row="2" Grid.Column="1" x:Name="scrapeFreelyCheck" Content="Scrape freely" IsChecked="false" VerticalAlignment="Center" Margin="5" Click="ScrapeFreelyEvent"/>
 
                 <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Click="ScrapWebsiteEvent" Width="100" Content="Scrape" Margin="5"/>
+                    <Button x:Name="scrapeButton" Click="ScrapeWebsiteEventAsync" Width="100" Content="Scrape" Margin="5"/>
                     <fa:ImageAwesome Name="spinnerControl" Visibility="Collapsed" Height="20" Icon="Spinner" Spin="True" SpinDuration="4" />
                 </StackPanel>
             </Grid>

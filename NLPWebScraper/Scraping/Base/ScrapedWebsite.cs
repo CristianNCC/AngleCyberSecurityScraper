@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using AngleSharp.Html.Dom;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Net.Http;
-using AngleSharp.Html.Parser;
-using System.IO;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
+using System.Collections.Generic;
 
 namespace NLPWebScraper
 {

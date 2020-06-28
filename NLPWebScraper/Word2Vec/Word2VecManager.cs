@@ -1,4 +1,8 @@
-﻿using System;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using PageRank.Rank;
@@ -169,7 +173,7 @@ namespace NLPWebScraper
 
                     // Remove the diagonal which only contains zeroes.
                     for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
-                        documentMatrix[rowIdx].RemoveAll(o => o == 0.0f);
+                        documentMatrix[rowIdx].RemoveAll(o => Math.Abs(o) < 1e-6);
 
                     // TextRank algorithm for sentences in documents.
                     var rankedDictionary = new PageRank<string>().Rank(documentGraph, 1.0f);

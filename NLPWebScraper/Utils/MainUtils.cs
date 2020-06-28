@@ -1,4 +1,8 @@
-﻿using AngleSharp.Html.Dom;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
@@ -75,14 +79,8 @@ namespace NLPWebScraper
 
         public static int ComputeLevenshteinDistance(string a, string b)
         {
-            if (String.IsNullOrEmpty(a) && String.IsNullOrEmpty(b))
+            if (String.IsNullOrEmpty(a) || String.IsNullOrEmpty(b))
                 return 0;
-
-            if (String.IsNullOrEmpty(a))
-                return b.Length;
-
-            if (String.IsNullOrEmpty(b))
-                return a.Length;
 
             int lengthA = a.Length;
             int lengthB = b.Length;
@@ -176,7 +174,7 @@ namespace NLPWebScraper
             foreach (var term in vocabulary)
             {
                 double numberOfDocsContainingTerm = stemmedDocuments.Where(document => document.Where(sentence => sentence.Any(word => word.ToLower() == term)).Any()).Count();
-                vocabularyIDF[term] = Math.Log((double)stemmedDocuments.Count / numberOfDocsContainingTerm != 0 ? ((double)1 + numberOfDocsContainingTerm) : 1);
+                vocabularyIDF[term] = Math.Log(Math.Abs((double)stemmedDocuments.Count / numberOfDocsContainingTerm) > 1e-6 ? ((double)1 + numberOfDocsContainingTerm) : 1);
             }
 
             // Transform each document into a vector of tfidf values.

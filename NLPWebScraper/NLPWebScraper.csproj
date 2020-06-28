@@ -95,8 +95,6 @@
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Scraping\Dynamic Scraping\DynamicallyScrapedWebsite.cs" />
     <Compile Include="Scraping\Base\ScrapedWebsite.cs" />
-    <Compile Include="Scraping\Static scraping\StaticallyScrapedWebsite.cs" />
-    <Compile Include="Scraping\Static scraping\HackerNews.cs" />
     <Compile Include="Utils\StopWords.cs" />
     <Compile Include="Utils\MainUtils.cs" />
     <Compile Include="Word2Vec\Word2VecManager.cs" />

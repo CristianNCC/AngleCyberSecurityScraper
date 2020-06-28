@@ -1,4 +1,7 @@
-﻿using AngleSharp.Dom;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 using AngleSharp.Html.Dom;
 using System;
 using System.Collections.Generic;
@@ -85,6 +88,9 @@ namespace NLPWebScraper
 
                     documentFeatureAnalyis.Add(new Tuple<AngleSharp.Dom.IElement, float, float>(node, node.GetNodeTextDensity(), node.GetNodeHyperlinkDensity()));
                 }
+
+                if (documentFeatureAnalyis.Count == 0)
+                    continue;
 
                 float textDensityThreshold = documentFeatureAnalyis.Average(feature => feature.Item2);
                 float hyperLinkDensityThreshold = documentFeatureAnalyis.Average(feature => feature.Item3);

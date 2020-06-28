@@ -1,12 +1,13 @@
-﻿using AngleSharp.Html.Dom;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
+using AngleSharp.Html.Dom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Newtonsoft.Json;
-using System.IO;
-using System.Runtime.InteropServices;
 
 namespace NLPWebScraper
 {
@@ -151,7 +152,7 @@ namespace NLPWebScraper
                 string currentLinkHost = currentLinkUri.Host;
                 if (link.Contains("about://"))
                     link = link.Replace("about://", "");
-                else if (currentLinkUri == null || new Uri(siteUrl).Host != currentLinkHost) 
+                else if (new Uri(siteUrl).Host != currentLinkHost) 
                     continue;
 
                 // Get the DOM of the current subpage.
@@ -198,10 +199,6 @@ namespace NLPWebScraper
                         foreach (var page in bestCS)
                         {
                             var webPageCS = await MainUtils.GetSubPageFromLink(page, siteUrl).ConfigureAwait(true);
-
-                            if (webPage == null)
-                                continue;
-
                             webDocuments.Add(new WebPage(webPageCS, page));
                         }
 
@@ -244,7 +241,7 @@ namespace NLPWebScraper
             if (testedGraphs.Count > 0)
             {
                 // If no graph is perfectly suitable according to the threshold, just return a best-effort graph.
-                var bestTestedGraph = testedGraphs.Where(testedGraph => testedGraph.Item1 == testedGraphs.Min(minDeviation => minDeviation.Item1)).First();
+                var bestTestedGraph = testedGraphs.Where(testedGraph => Math.Abs(testedGraph.Item1 - testedGraphs.Min(minDeviation => minDeviation.Item1)) < 1e-6).First();
 
                 UpdateGUIWithState("No perfectly fitting subdigraph found, using a best-effort subdigraph with " + bestTestedGraph.Item1.ToString() + " deviation...");
 
@@ -342,6 +339,12 @@ namespace NLPWebScraper
 
         public async Task DynamicScrapingForInformationGathering(List<string> queryTerms, int numberOfPagesToGather)
         {
+            // Make sure we know the template.
+            if (websiteTemplate.Count == 0)
+            {
+                await DynamicScrapingForTemplateExtraction().ConfigureAwait(true);
+            }
+
             UpdateGUIWithState("Template done. Looking for query terms...");
 
             // Clear the processed links list and add the starting page.
@@ -434,30 +437,43 @@ namespace NLPWebScraper
                     // Compute the top words for this selection or articles.
                     ComputeTopWords();
 
-                    queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
-                    for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
+                    if (queryTerms.Count != 0)
                     {
-                        if (scrapingResults[iDocIdx].isValid)
-                            continue;
-
-                        // Add any new found data to the database of page-topWords entries. It may be useful in the future.
-                        SiteDatabaseManager.extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topWords));
-
-                        if (scrapingResults[iDocIdx].topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
+                        queryTerms = queryTerms.Select(term => term.ToLower()).ToList();
+                        for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
                         {
-                            scrapingResults[iDocIdx].isValid = false;
-                        }
-                        else
-                        {
-                            // If we find a valid page in regards to our query, any outgoing pages from this one page 
-                            // should have an increased priority because they are related to it.
-                            scrapingResults[iDocIdx].isValid = true;
-                            foreach(var linkToBeProcessed in linksToProcess)
+                            if (scrapingResults[iDocIdx].isValid)
+                                continue;
+
+                            // Add any new found data to the database of page-topWords entries. It may be useful in the future.
+                            SiteDatabaseManager.extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topWords));
+
+                            if (scrapingResults[iDocIdx].topWords.Intersect(queryTerms, StringComparer.InvariantCultureIgnoreCase).Count() == 0)
                             {
-                                if (linkToBeProcessed.parentLink == scrapingResults[iDocIdx].linkToPage)
-                                    linkToBeProcessed.priority = 10;
+                                scrapingResults[iDocIdx].isValid = false;
                             }
-                            RefreshLinksHashSet(ref linksToProcess);
+                            else
+                            {
+                                // If we find a valid page in regards to our query, any outgoing pages from this one page 
+                                // should have an increased priority because they are related to it.
+                                scrapingResults[iDocIdx].isValid = true;
+                                foreach (var linkToBeProcessed in linksToProcess)
+                                {
+                                    if (linkToBeProcessed.parentLink == scrapingResults[iDocIdx].linkToPage)
+                                        linkToBeProcessed.priority = 10;
+                                }
+                                RefreshLinksHashSet(ref linksToProcess);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int iDocIdx = 0; iDocIdx < scrapingResults.Count; iDocIdx++)
+                        {
+                            // Add any new found data to the database of page-topWords entries. It may be useful in the future.
+                            SiteDatabaseManager.extractionDatabase.Add(new SiteTopWordsEntry(scrapingResults[iDocIdx].linkToPage, scrapingResults[iDocIdx].topWords));
+
+                            scrapingResults[iDocIdx].isValid = false;
                         }
                     }
 
@@ -507,7 +523,7 @@ namespace NLPWebScraper
 
                 // Skip links that sidetrack us to other sites.
                 Uri currentLinkUri = new Uri(link);
-                if (currentLinkUri == null || mainPageHost != currentLinkUri.Host)
+                if (mainPageHost != currentLinkUri.Host)
                     continue;
 
                 var document = await MainUtils.GetSubPageFromLink(link, siteUrl).ConfigureAwait(true);
@@ -531,10 +547,13 @@ namespace NLPWebScraper
                 // Add outgoing links to the set of links to be processed.
                 linksToProcess = AddLinksToSetAndRefresh(document, linksToProcess, link);
 
-                // Before we do all the NLP and Word2Vec processing, we can do a shallow search of the query terms.
-                bool shallowSearch = document.All.Select(element => element.TextContent).ToList().Any(content => queryTerms.Any(queryTerm => content.Contains(queryTerm)));
-                if (!shallowSearch)
-                    continue;
+                if (queryTerms.Count != 0)
+                {
+                    // Before we do all the NLP and Word2Vec processing, we can do a shallow search of the query terms.
+                    bool shallowSearch = document.All.Select(element => element.TextContent).ToList().Any(content => queryTerms.Any(queryTerm => content.Contains(queryTerm)));
+                    if (!shallowSearch)
+                        continue;
+                }
 
                 // Add the links and documents.
                 bestCS.Add(link);

@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Word2Vec.Net
+﻿namespace Word2Vec.Net
 {
     public class Word2VecBuilder
     {
