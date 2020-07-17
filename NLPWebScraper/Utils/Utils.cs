@@ -1,86 +1,21 @@
-﻿// This is a personal academic project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using AngleSharp.Html.Dom;
-using AngleSharp.Html.Parser;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NLPWebScraper
 {
-    public static class UICallbackTimer
+    class Utils
     {
-        public static void DelayExecution(TimeSpan delay, Action action)
-        {
-            System.Threading.Timer timer = null;
-            SynchronizationContext context = SynchronizationContext.Current;
-
-            timer = new System.Threading.Timer(
-                (ignore) =>
-                {
-                    timer.Dispose();
-
-                    context.Post(ignore2 => action(), null);
-                }, null, delay, TimeSpan.FromMilliseconds(-1));
-        }
-    }
-
-    public static class MainUtils
-    {
-        public static int PagesScrapedSoFar { get; set; } = 0;
-
-        public static async Task<IHtmlDocument> GetSubPageFromLink(string url, string siteUrl)
-        {
-            IHtmlDocument webPage;
-            try
-            {
-                webPage = await GetDocumentFromLink(url).ConfigureAwait(true);
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    webPage = await GetDocumentFromLink(siteUrl + url).ConfigureAwait(true);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-            }
-
-            PagesScrapedSoFar++;
-            return webPage;
-        }
-
-        public static async Task<IHtmlDocument> GetDocumentFromLink(string url)
-        {
-            CancellationTokenSource cancellationToken = new CancellationTokenSource();
-            HttpClient httpClient = new HttpClient();
-            HtmlParser parser = new HtmlParser();
-
-            HttpResponseMessage request = await httpClient.GetAsync(url).ConfigureAwait(true);
-            cancellationToken.Token.ThrowIfCancellationRequested();
-
-            Stream response = await request.Content.ReadAsStreamAsync().ConfigureAwait(true);
-            cancellationToken.Token.ThrowIfCancellationRequested();
-
-            IHtmlDocument document = parser.ParseDocument(response);
-
-            httpClient.Dispose();
-            cancellationToken.Dispose();
-            return document;
-        }
-
         public static int ComputeLevenshteinDistance(string a, string b)
         {
-            if (String.IsNullOrEmpty(a) || String.IsNullOrEmpty(b))
+            if (String.IsNullOrEmpty(a) && String.IsNullOrEmpty(b))
                 return 0;
+
+            if (String.IsNullOrEmpty(a))
+                return b.Length;
+
+            if (String.IsNullOrEmpty(b))
+                return a.Length;
 
             int lengthA = a.Length;
             int lengthB = b.Length;
@@ -174,7 +109,7 @@ namespace NLPWebScraper
             foreach (var term in vocabulary)
             {
                 double numberOfDocsContainingTerm = stemmedDocuments.Where(document => document.Where(sentence => sentence.Any(word => word.ToLower() == term)).Any()).Count();
-                vocabularyIDF[term] = Math.Log(Math.Abs((double)stemmedDocuments.Count / numberOfDocsContainingTerm) > 1e-6 ? ((double)1 + numberOfDocsContainingTerm) : 1);
+                vocabularyIDF[term] = Math.Log((double)stemmedDocuments.Count / numberOfDocsContainingTerm != 0 ? ((double)1 + numberOfDocsContainingTerm) : 1);
             }
 
             // Transform each document into a vector of tfidf values.

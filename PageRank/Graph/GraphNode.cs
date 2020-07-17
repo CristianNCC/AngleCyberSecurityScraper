@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace PageRank.Graph
 {
@@ -53,10 +54,10 @@ namespace PageRank.Graph
         {
             get
             {
-                if (_neighbors == null)
+                if (this._neighbors == null)
                     _neighbors = new Neighbors<T>();
 
-                return _neighbors;
+                return this._neighbors;
             }
         }
 
@@ -67,7 +68,7 @@ namespace PageRank.Graph
         {
             get
             {
-                if (_neighbors == null)
+                if (this._neighbors == null)
                     _neighbors = new Neighbors<T>();
 
                 List<GraphNode<T>> list = new List<GraphNode<T>>();

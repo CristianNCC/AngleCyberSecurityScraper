@@ -1,8 +1,4 @@
-﻿// This is a personal academic project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +12,7 @@ namespace NLPWebScraper
                 return 0.0f;
 
             double ret = 0;
-            if (values.Count > 1)
+            if (values.Count > 0)
             {  
                 double avg = values.Average();     
                 double sum = values.Sum(d => Math.Pow(d - avg, 2));    

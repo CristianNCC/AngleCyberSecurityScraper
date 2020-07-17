@@ -69,7 +69,7 @@ namespace PageRank.Graph
             }
 
             Neighbor<T> nab = new Neighbor<T>(destination, weight);
-            Add(nab);
+            this.Add(nab);
         }
     }
 }

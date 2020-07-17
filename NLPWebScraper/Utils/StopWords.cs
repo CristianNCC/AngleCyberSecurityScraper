@@ -1,4 +1,10 @@
-﻿namespace NLPWebScraper
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NLPWebScraper
 {
     // As taken from here: https://github.com/primaryobjects/TFIDF/blob/master/TFIDFExample/StopWords.cs .
     public static class StopWords

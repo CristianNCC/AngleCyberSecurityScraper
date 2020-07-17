@@ -20,8 +20,8 @@
 
         public Node(T data, NodeSet<T> neighbors)
         {
-            _data = data;
-            _neighbors = neighbors;
+            this._data = data;
+            this._neighbors = neighbors;
         }
 
         public T Value

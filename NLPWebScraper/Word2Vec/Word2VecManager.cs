@@ -1,8 +1,4 @@
-﻿// This is a personal academic project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using PageRank.Rank;
@@ -31,7 +27,7 @@ namespace NLPWebScraper
         #endregion
 
         #region Private methods
-        public static void LoadUpWord2VecDatabase(int initSize = 150000)
+        private static void LoadUpWord2VecDatabase(int initSize = 150000)
         {
             if (word2VecDistance == null && File.Exists(word2VecDatabasePath))
                 word2VecDistance = new Distance(word2VecDatabasePath, initSize);
@@ -88,27 +84,6 @@ namespace NLPWebScraper
             return vec;
         }
 
-        public static float GetSentencesSimilarity(string[] sentenceOne, string[] sentenceTwo)
-        {
-            if (sentenceOne == null || sentenceTwo == null)
-                return 0.0f;
-
-            float[] sumSentenceOne = new float[databaseFeatureSize];
-            Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
-            float[] sumSentenceTwo = new float[databaseFeatureSize];
-            Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
-
-            ComputeSentenceVector(sentenceOne, ref sumSentenceOne);
-            ComputeSentenceVector(sentenceTwo, ref sumSentenceTwo);
-
-            float ratioOne = 1.0f / sumSentenceOne.Sum();
-            sumSentenceOne = sumSentenceOne.Select(o => o * ratioOne).ToList().ToArray();
-            float ratioTwo = 1.0f / sumSentenceTwo.Sum();
-            sumSentenceTwo = sumSentenceTwo.Select(o => o * ratioTwo).ToList().ToArray();
-            
-            return MainUtils.CalculateCosineSimilarity(sumSentenceOne, sumSentenceTwo);
-        }
-
         public static void RunWord2Vec(List<ScrapedWebsite> scrapedWebsites, int summarySize)
         {
             if (scrapedWebsites == null)
@@ -146,8 +121,21 @@ namespace NLPWebScraper
                             string[] sentenceOne = scrapingResult.sentencesWords[sentenceOneIdx].ToArray();
                             string[] sentenceTwo = scrapingResult.sentencesWords[sentenceTwoIdx].ToArray();
 
+                            float[] sumSentenceOne = new float[databaseFeatureSize];
+                            Array.Clear(sumSentenceOne, 0, sumSentenceOne.Length);
+                            float[] sumSentenceTwo = new float[databaseFeatureSize];
+                            Array.Clear(sumSentenceTwo, 0, sumSentenceTwo.Length);
+
+                            ComputeSentenceVector(sentenceOne, ref sumSentenceOne);
+                            ComputeSentenceVector(sentenceTwo, ref sumSentenceTwo);
+
+                            float ratioOne = 1.0f / sumSentenceOne.Sum();
+                            sumSentenceOne = sumSentenceOne.Select(o => o * ratioOne).ToList().ToArray();
+                            float ratioTwo = 1.0f / sumSentenceTwo.Sum();
+                            sumSentenceTwo = sumSentenceTwo.Select(o => o * ratioTwo).ToList().ToArray();
+
                             documentMatrix[sentenceOneIdx].Add(new float());
-                            documentMatrix[sentenceOneIdx][sentenceTwoIdx] = GetSentencesSimilarity(sentenceOne, sentenceTwo);
+                            documentMatrix[sentenceOneIdx][sentenceTwoIdx] = Utils.CalculateCosineSimilarity(sumSentenceOne, sumSentenceTwo);
                         }
                     }
 
@@ -173,7 +161,7 @@ namespace NLPWebScraper
 
                     // Remove the diagonal which only contains zeroes.
                     for (int rowIdx = 0; rowIdx < scrapingResult.sentencesWords.Count; rowIdx++)
-                        documentMatrix[rowIdx].RemoveAll(o => Math.Abs(o) < 1e-6);
+                        documentMatrix[rowIdx].RemoveAll(o => o == 0.0f);
 
                     // TextRank algorithm for sentences in documents.
                     var rankedDictionary = new PageRank<string>().Rank(documentGraph, 1.0f);

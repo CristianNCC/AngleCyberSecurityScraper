@@ -1,19 +1,18 @@
-﻿// This is a personal academic project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using AngleSharp.Dom;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Diagnostics;
+using System.Windows.Navigation;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
+using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
 using System.IO;
 using AngleSharp;
-using OpenNLP;
-using System.Threading;
 
 namespace NLPWebScraper
 {
@@ -24,16 +23,11 @@ namespace NLPWebScraper
 
         public bool analyzeNamedEntities = false;
         public int numberOfPages;
-        public List<string> queryTerms = new List<string>();
+        public List<string> queryTerms;
         List<ScrapedWebsite> scrapedWebsites = new List<ScrapedWebsite>();
-
-        public bool currentlyLoadingWord2vec = false;
 
         // If scraping for information is false, then the scraping will stop at finding the template.
         public bool scrapeOnlyForTemplate = true;
-
-        // If true, the program will scrape freely in the website and learn its pages.
-        public bool scrapeFreely = false;
 
         // List of dictionaries where Key=Term and list of tuples <url, articleTitle, titlePolarity>
         public List<Dictionary<string, List<Tuple<string, string, int>>>> listTermToScrapeDictionary = new List<Dictionary<string, List<Tuple<string, string, int>>>>();
@@ -41,28 +35,9 @@ namespace NLPWebScraper
         public MainWindow()
         {
             InitializeComponent();
-
-            UICallbackTimer.DelayExecution(TimeSpan.FromSeconds(2),  () => 
-            {
-                new Thread(() =>
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        currentlyLoadingWord2vec = true;
-                        spinnerControl.Visibility = System.Windows.Visibility.Visible;
-                    });
-
-                    Word2VecManager.LoadUpWord2VecDatabase();
-                    SiteDatabaseManager.DeserializeSiteInformation();
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        currentlyLoadingWord2vec = false;
-                        spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
-                    });
-
-                }).Start();
-            });
+            dynamicScrapingCheckbox.IsChecked = true;
+            dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
+            LoadUpSupportedWebsites();
         }
 
         private async void DynamicScraping()
@@ -96,20 +71,21 @@ namespace NLPWebScraper
                 }
 
                 UpdateTextBoxWithStatus("Writing the results to disk...");
-                ConcatenateDataForPrint(scrapedWebsite.scrapingResults, ref results);
+                ConcatenateDataForPrint(scrapedWebsite, ref results);
                 UpdateTextBoxWithStatus("Done writing the results to disk as a text file.");
                 spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
 
                 var outputHTML = await CreateHTMLDocumentFromSummaryAsync(scrapedWebsite).ConfigureAwait(true);
                 File.WriteAllText(pathToResultsHTML, outputHTML.ToHtml());
+                System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "\\" + pathToResultsHTML.Replace("//", "\\"));
                 UpdateTextBoxWithStatus("Generated a HTML page and saved to disk. The process is finished...");
             }
         }
 
-        private void ConcatenateDataForPrint(List<DocumentScrapingResult> scrapingResults, ref string results) 
+        private void ConcatenateDataForPrint(DynamicallyScrapedWebsite scrapedWebsite, ref string results) 
         {
             int iDocumentIdx = 0;
-            foreach (var documentResult in scrapingResults)
+            foreach (var documentResult in scrapedWebsite.scrapingResults)
             {
                 results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
                 results += "========================================================= Link: " + documentResult.linkToPage + "==============================================================";
@@ -126,10 +102,10 @@ namespace NLPWebScraper
                     results += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
                     var namedEntities = OpenNLP.APIOpenNLP.FindNames(documentResult.content);
-                    var dateListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<date>"), (MainUtils.AllIndexesOf(namedEntities, "</date>")));
-                    var personListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<person>"), (MainUtils.AllIndexesOf(namedEntities, "</person>")));
-                    var timeListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<time>"), (MainUtils.AllIndexesOf(namedEntities, "</time>")));
-                    var organizationListTupleIndexes = MainUtils.MergeToTuples(MainUtils.AllIndexesOf(namedEntities, "<organization>"), (MainUtils.AllIndexesOf(namedEntities, "</organization>")));
+                    var dateListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<date>"), (Utils.AllIndexesOf(namedEntities, "</date>")));
+                    var personListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<person>"), (Utils.AllIndexesOf(namedEntities, "</person>")));
+                    var timeListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<time>"), (Utils.AllIndexesOf(namedEntities, "</time>")));
+                    var organizationListTupleIndexes = Utils.MergeToTuples(Utils.AllIndexesOf(namedEntities, "<organization>"), (Utils.AllIndexesOf(namedEntities, "</organization>")));
 
                     results += dateListTupleIndexes.Count > 0 ? "Dates: " : "";
                     foreach (var tuple in dateListTupleIndexes)
@@ -174,6 +150,72 @@ namespace NLPWebScraper
 
                 iDocumentIdx++;
             }
+        }
+
+        private async void StaticScraping()
+        {
+            for (int iWebsiteIdx = 0; iWebsiteIdx < scrapedWebsites.Count; iWebsiteIdx++)
+            {
+                StaticallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as StaticallyScrapedWebsite;
+                listTermToScrapeDictionary.Add(new Dictionary<string, List<Tuple<string, string, int>>>());
+
+                if (scrapedWebsite == null)
+                    continue;
+
+                Task<List<IHtmlDocument>> scrapeWebSiteTask = scrapedWebsite.ScrapeWebsite(numberOfPages);
+                List<IHtmlDocument> webDocuments = await scrapeWebSiteTask.ConfigureAwait(true);      
+
+                foreach (var document in webDocuments)
+                {
+                    FillResultsDictionary(iWebsiteIdx, document.All.Where(x => x.ClassName == scrapedWebsite.storyClassName),
+                        scrapedWebsite.CleanUpResultsForUrlAndTitle);
+                }
+            }
+
+            foreach (var websiteDictionary in listTermToScrapeDictionary)
+            {
+                foreach (var termToScrape in websiteDictionary)
+                {
+                    List<Tuple<string, string, int>> termResults = termToScrape.Value;
+
+                    GroupBox termGroupBox = new GroupBox()
+                    {
+                        Header = termToScrape.Key,
+                        Content = new StackPanel()
+                        {
+                            Orientation = Orientation.Vertical,
+                            Margin = new Thickness(5, 5, 5, 5)
+                        }
+                    };
+
+                    List<Tuple<string, string, int>> sortedResults = termResults.OrderBy(result => result.Item3).ToList();
+
+                    for (int iTermResult = 0; iTermResult < sortedResults.Count; iTermResult++)
+                    {
+                        TextBlock title = new TextBlock()
+                        {
+#pragma warning disable CA1305 // Specify IFormatProvider
+                            Text = " Polarity: (" + sortedResults[iTermResult].Item3.ToString() + "): " + sortedResults[iTermResult].Item1
+#pragma warning restore CA1305 // Specify IFormatProvider
+                        };
+
+                        (termGroupBox.Content as StackPanel).Children.Add(title);
+
+                        Hyperlink hyperlink = new Hyperlink();
+                        hyperlink.Inlines.Add(sortedResults[iTermResult].Item2);
+                        hyperlink.NavigateUri = new Uri(sortedResults[iTermResult].Item2);
+                        hyperlink.RequestNavigate += Hyperlink_RequestNavigate;
+
+                        TextBlock urlTextBlock = new TextBlock();
+                        urlTextBlock.Inlines.Add(hyperlink);
+                        urlTextBlock.Margin = new Thickness(5, 5, 5, 10);
+
+                        (termGroupBox.Content as StackPanel).Children.Add(urlTextBlock);
+                    }
+                }
+            }
+
+            spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         public void FillResultsDictionary(int websiteIdx, IEnumerable<IElement> articleLinksList, Func<IElement, Tuple<string, string>> CleanUpResults)
@@ -248,18 +290,13 @@ namespace NLPWebScraper
             return document;
         }
 
-        private async void ScrapeWebsiteEventAsync(object sender, RoutedEventArgs e)
+        private void LoadUpSupportedWebsites()
         {
-            if (currentlyLoadingWord2vec)
-            {
-                return;
-            }
-            else if (scrapeFreely)
-            {
-                await ScrapeFreelyAsync().ConfigureAwait(true);
-                return;
-            }
+            scrapedWebsites.Add(new HackerNews("https://thehackernews.com/"));
+        }
 
+        private void ScrapWebsiteEvent(object sender, RoutedEventArgs e)
+        {
             listTermToScrapeDictionary.Clear();
             spinnerControl.Visibility = System.Windows.Visibility.Visible;
 
@@ -270,29 +307,16 @@ namespace NLPWebScraper
             if (!noPagesCast || !subdigraphSizeCast || !maxConnectionsCast || !word2VecMaxCountCast)
                 return;
 
-            scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
-            scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, subdigraphSize, maxConnections, word2VecMaxCount, UpdateTextBoxWithStatus));
             queryTerms = queryTermsTextBox.Text.Split(';').ToList();
 
-            DynamicScraping();
-        }
-
-        private async Task ScrapeFreelyAsync()
-        {
-            spinnerControl.Visibility = System.Windows.Visibility.Visible;
-            bool subdigraphSizeCast = int.TryParse(subdigraphSizeTextbox.Text, out int subdigraphSize);
-            bool maxConnectionsCast = int.TryParse(maxConnectionsTextbox.Text, out int maxConnections);
-            bool word2VecMaxCountCast = int.TryParse(word2VecCountToLoadTextbox.Text, out int word2VecMaxCount);
-
-            if (!subdigraphSizeCast || !maxConnectionsCast || !word2VecMaxCountCast)
-                return;
-
-            scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
-            scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, subdigraphSize, maxConnections, word2VecMaxCount, UpdateTextBoxWithStatus));
-            DynamicallyScrapedWebsite website = scrapedWebsites.First() as DynamicallyScrapedWebsite;
-
-            await Task.Run(() => website.DynamicScrapingForInformationGathering(queryTerms, 10)).ConfigureAwait(true);
-            spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
+            if (dynamicScrapingCheckbox.IsChecked == true)
+            {
+                scrapedWebsites.RemoveAll(scrapedWebsite => scrapedWebsite is DynamicallyScrapedWebsite);
+                scrapedWebsites.Add(new DynamicallyScrapedWebsite(targetWebsiteTextbox.Text, subdigraphSize, maxConnections, word2VecMaxCount, UpdateTextBoxWithStatus));
+                DynamicScraping();
+            }
+            else
+                StaticScraping();
         }
 
         private void UpdateResults()
@@ -303,7 +327,7 @@ namespace NLPWebScraper
                 DynamicallyScrapedWebsite scrapedWebsite = scrapedWebsites[iWebsiteIdx] as DynamicallyScrapedWebsite;
                 if (scrapedWebsite == null)
                     continue;
-                ConcatenateDataForPrint(scrapedWebsite.scrapingResults, ref results);
+                ConcatenateDataForPrint(scrapedWebsite, ref results);
             }
             File.WriteAllText(pathToResults, results); 
         }
@@ -319,6 +343,17 @@ namespace NLPWebScraper
             e.Handled = regex.IsMatch(e.Text);
         }
 
+        private void ToggleScrapingMode(object sender, RoutedEventArgs e)
+        {
+            dynamicScrapingGroupBox.IsEnabled = dynamicScrapingCheckbox.IsChecked == true;
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            e.Handled = true;
+        }
+
         private void ScrapeForTemplateIsChecked(object sender, RoutedEventArgs e)
         {
             scrapeOnlyForTemplate = scrapeOnlyForTemplateCheckbox.IsChecked == true;
@@ -327,104 +362,6 @@ namespace NLPWebScraper
                 queryTermsTextBox.IsEnabled = false;
             else
                 queryTermsTextBox.IsEnabled = true;
-        }
-
-        private void ScrapeFreelyEvent(object sender, RoutedEventArgs e)
-        {
-            scrapeFreely = scrapeFreelyCheck.IsChecked == true;
-        }
-
-        private void onAsk(object sender, RoutedEventArgs e)
-        {
-            var question = questionTextbox.Text;
-            var siteUrl = targetWebsiteTextbox.Text;
-
-            new Thread(async () =>
-            {
-                  Dispatcher.Invoke(() =>
-                  {
-                      spinnerControl.Visibility = System.Windows.Visibility.Visible;
-                  });
-
-                  SiteDatabaseManager.DeserializeSiteInformation();
-
-                  var tokenizedQuestion = APIOpenNLP.TokenizeSentence(question);
-                  var filteredQuestionList = tokenizedQuestion.Where(word => !StopWords.GetStopWordsList().Contains(word.ToLower())).ToList();
-
-                  filteredQuestionList.Remove(".");
-                  filteredQuestionList.Remove("?");
-                  filteredQuestionList.Remove("!");
-                  filteredQuestionList.Remove(";");
-                  var filteredQuestion = filteredQuestionList.ToArray();
-
-                  // Find the best fit page for this question.
-                  double bestFitPageSimilarity = Double.NegativeInfinity;
-                  string bestFitPageURL = null;
-                  foreach (var databaseEntry in SiteDatabaseManager.extractionDatabase)
-                  {
-                      var topWordsInEntry = databaseEntry.topWords.ToArray();
-                      float similarity = Word2VecManager.GetSentencesSimilarity(filteredQuestion, topWordsInEntry);
-                      if (similarity > bestFitPageSimilarity)
-                      {
-                          bestFitPageSimilarity = similarity;
-                          bestFitPageURL = databaseEntry.pageUrl;
-                      }
-                  }
-
-                  var document = await MainUtils.GetSubPageFromLink(bestFitPageURL, siteUrl).ConfigureAwait(true);
-                  if (document == null)
-                      return;
-
-                  List<DocumentScrapingResult> scrapingResults = new List<DocumentScrapingResult>();
-                  List<WebPage> webPagesList = new List<WebPage>
-                  {
-                      new WebPage(document, bestFitPageURL)
-                  };
-
-                  NoiseFilteringManager.NodeFiltering(webPagesList, ref scrapingResults);
-                  NoiseFilteringManager.ApplyNLPFiltering(ref scrapingResults);
-
-                  string results = string.Empty;
-
-                  foreach (var result in scrapingResults)
-                  {
-                    var contentList = result.scrapingResults.Select(scrapingResult => scrapingResult.element.TextContent).ToList();
-
-                    if (contentList.Count == 0)
-                        continue;
-
-                    results += contentList.Aggregate((a,b) => a + b);
-                  }
-
-                  var tokenizedSentences = APIOpenNLP.SplitSentences(results);
-
-                  double bestFitSentenceSimilarity = Double.NegativeInfinity;
-                  string bestFitSentence = null;
-                  foreach (var sentence in tokenizedSentences)
-                  {
-                    if (sentence == null)
-                        continue;
-
-                    var tokenizedSentence = APIOpenNLP.TokenizeSentence(sentence);
-                    if (tokenizedSentence == null || tokenizedSentence.Length < NoiseFilteringManager.minimumSentenceSize)
-                        continue;
-
-                    float similarity = Word2VecManager.GetSentencesSimilarity(filteredQuestion, tokenizedSentence) / tokenizedSentence.Length;
-
-                    if (similarity > bestFitSentenceSimilarity)
-                    {
-                        bestFitSentenceSimilarity = similarity;
-                        bestFitSentence = sentence;
-                    }
-                  }
-
-                  Dispatcher.Invoke(() =>
-                  {
-                      scrapingStatusTextbox.Text = bestFitSentence;
-                      spinnerControl.Visibility = System.Windows.Visibility.Collapsed;
-                  });
-
-              }).Start();
         }
     }
 }
