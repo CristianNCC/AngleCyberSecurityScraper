@@ -1,4 +1,6 @@
-### WebScraper-Summarizer
+## Disclaimer
+
+The code is somewhat dirty since it was written in a very crunch-like manner on top of the fact that it started of as a simple static webscraper, then it turned into a dynamic webscraper, then it needed NLP features and key-word searching and gathering and so on... 
 
 ## Description
 This is the application I developed for my disertation thesis at the University of Bucharest. It is a web scraper that only takes the URL to the homepage of website as input and then scrapes the pages that contain text information by matching them in a certain template. The scraped text output is then summarized and displayed. It can also search for keywords and display pages where those words are among the most important, while also storing data for further queries. Sadly, the documentation in the repo is in Romanian since this was required.
